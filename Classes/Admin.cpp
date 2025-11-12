@@ -19,6 +19,12 @@ void Admin::setAdminCode(const string& code)
 	adminCode = code;
 }
 
+bool Admin::createTicket() 
+{
+	// Implementation for creating a ticket goes here
+	return true; // Placeholder return value
+}
+
 Admin::~Admin()
 {
 	// Destructor

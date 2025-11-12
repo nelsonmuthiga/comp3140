@@ -2,7 +2,6 @@
 #define CUSTOMER_USER_H
 #include <string>
 #include "User.h" // Include the base User class
-#endif // !CUSTOMER_USER_H
 
 class Customer : public User {
 	public:
@@ -15,9 +14,14 @@ class Customer : public User {
 
 	void setAge(int); // set age
 
-	void addCustomerToDatabase();
+	bool purchaseTicket(); // purchase a ticket
+
+	string viewTickets(); // view tickets
+
+	bool cancelTicket(); // cancel a ticket
 
 	~Customer(); // destructor
 	private:
 		int age;
 };
+#endif // !CUSTOMER_USER_H
