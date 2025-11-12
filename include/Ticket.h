@@ -1,63 +1,48 @@
 #ifndef TICKET_H
 #define TICKET_H
 #include <string>
+#include <chrono>
 #include "BaseUser.h"
-#include <date/date.h>
-#include 'Vehicle.h'
+#include "Vehicle.h"
 
 class Ticket {
 
-	public:
+public:
+    Ticket(); // default constructor
 
-	Ticket(); // default constructor
+    // Fixed: added & after BaseUser and Vehicle, added std:: before chrono
+    Ticket(const std::string&, const std::string&, const BaseUser&, 
+           const std::chrono::system_clock::time_point&, float, 
+           const Vehicle&, const std::string&, const std::string&);
 
-	Ticket(const std::string&, const std::string&, const BaseUser user&, const date::date&, float, const Vehicle vehicle, const std::string&, const std::string&); // parameterized constructor
+    void setTicketId(const std::string&);
+    void setStatus(const std::string&);
+    void setUser(const BaseUser&);
+    void setDate(const std::chrono::system_clock::time_point&);
+    void setPrice(float);
+    void setVehicle(const Vehicle&);
+    void setOrigin(const std::string&);
+    void setDestination(const std::string&);
 
-	void setTicketId(const std::string&); // set event name
+    std::string getTicketId() const;
+    std::string getStatus() const;
+    BaseUser getUser() const;
+    std::chrono::system_clock::time_point getDate() const; // Changed from date::date
+    float getPrice() const;
+    Vehicle getVehicle() const;
+    std::string getOrigin() const;
+    std::string getDestination() const;
 
-	void setStatus(const std::string&); // set status
+    ~Ticket();
 
-	void setUser(const BaseUser user); // set user
-
-	void setDate(const date::date&); // set date
-
-	void setPrice(float); // set price
-
-	void setVehicle(const Vehicle vehicle); // set vehicle
-
-	void setOrigin(const std::string&); // set origin
-
-	void setDestination(const std::string&); // set destination
-
-	std::string getTicketId() const; // return ticket id
-
-	std::string getStatus() const; // return status
-
-	BaseUser getUser() const; // return user
-
-	date::date getDate() const; // return date
-
-	float getPrice() const; // return price
-
-	Vehicle getVehicle() const; // return vehicle
-
-	std::string getOrigin() const; // return origin
-
-	std::string getDestination() const; // return destination
-
-
-	~Ticket(); // destructor
-
-	private:
-
-		std::string ticketId;
-		std::string status;
-		BaseUser user;
-		date::date date;
-		float price;
-		Vehicle vehicle;
-		std::string origin;
-		std::string destination;
-
+private:
+    std::string ticketId;
+    std::string status;
+    BaseUser user;
+    std::chrono::system_clock::time_point date; // Changed from date::date
+    float price;
+    Vehicle vehicle;
+    std::string origin;
+    std::string destination;
 };
 #endif
