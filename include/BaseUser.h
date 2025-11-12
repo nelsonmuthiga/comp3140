@@ -17,9 +17,11 @@ public:
     // using const reference becuase we are not modifying anything
     BaseUser(int id, const std::string &userName, const std::string &password, const std::string &fullName, const std::string &email);
 
-    void updateInfo();
-    bool login(const std::string &userName, const std::string &password);
-    bool logout();
+    virtual ~BaseUser() = default;
+    
+    virtual void updateInfo();
+    virtual bool login(const std::string &userName, const std::string &password);
+    virtual bool logout();
 
     // getter
     int getId() const;
