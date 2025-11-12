@@ -14,7 +14,7 @@ public:
     BaseUser() = default;
 
     // parameterized constructor
-    // using const reference becuase we are not modifying anything
+    // using const reference because we are not modifying anything
     BaseUser(int id, const std::string &userName, const std::string &password, const std::string &fullName, const std::string &email);
 
     virtual ~BaseUser() = default;
