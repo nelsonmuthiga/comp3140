@@ -5,7 +5,7 @@
 class BaseUser
 {
 private:
-    // base paramters
+    // base parameters
     int id;
     std::string userName, password, fullName, email;
 
