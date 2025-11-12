@@ -149,18 +149,33 @@ void handleCustomerMenu(shared_ptr<Customer> customer) {
             case 1: {
                 customer->browseEvents();
                 int ticketChoice, numTickets;
-                cout << "\nSelect ticket type (1-3): ";
-                cin >> ticketChoice;
-                cout << "Number of tickets: ";
-                cin >> numTickets;
-
-                if (ticketChoice >= 1 && ticketChoice <= 3 && numTickets > 0) {
-                    string bookingId = "BK" + to_string(rand() % 10000);
-                    customer->bookTicket(bookingId);
-                    cout << "Confirmation will be sent to " << customer->getEmail() << endl;
-                } else {
-                    cout << "\nInvalid selection!" << endl;
+                while (true) {
+                    cout << "\nSelect ticket type (1-3): ";
+                    cin >> ticketChoice;
+                    if (cin.fail()) {
+                        cin.clear();
+                        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                        cout << "Invalid input! Please enter a number for ticket type." << endl;
+                        continue;
+                    }
+                    cout << "Number of tickets: ";
+                    cin >> numTickets;
+                    if (cin.fail()) {
+                        cin.clear();
+                        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                        cout << "Invalid input! Please enter a number for number of tickets." << endl;
+                        continue;
+                    }
+                    if (ticketChoice >= 1 && ticketChoice <= 3 && numTickets > 0) {
+                        break;
+                    } else {
+                        cout << "\nInvalid selection! Please try again." << endl;
+                    }
                 }
+
+                string bookingId = "BK" + to_string(rand() % 10000);
+                customer->bookTicket(bookingId);
+                cout << "Confirmation will be sent to " << customer->getEmail() << endl;
                 pauseScreen();
                 break;
             }
