@@ -1,21 +1,21 @@
 # Ticket Booking System
 
-A console-based ticket booking system built in C++ for COMP 3140. This application allows customers to book tickets for events and provides administrative functions for managing the system.
+A console-based ticket booking system built in C++ for COMP 3140. This application allows customers to book transportation tickets and provides administrative functions for managing the system.
 
 ## Features
 
 ### Customer Features
 
 - User registration and login
-- Browse available events
-- Book tickets for events
+- Browse available tickets
+- Book tickets
 - View booked tickets
 - Cancel ticket bookings
 
 ### Admin Features
 
 - View all ticket bookings in the system
-- Manage events (add, edit, delete)
+- Manage tickets (add, edit, delete)
 - View customer list
 - Generate reports
 
