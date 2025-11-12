@@ -18,7 +18,7 @@ public:
     BaseUser(int id, const std::string &userName, const std::string &password, const std::string &fullName, const std::string &email);
 
     virtual ~BaseUser() = default;
-    
+
     virtual void updateInfo();
     virtual bool login(const std::string &userName, const std::string &password);
     virtual bool logout();

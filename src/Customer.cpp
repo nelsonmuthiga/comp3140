@@ -3,43 +3,54 @@
 #include <algorithm>
 
 // Parameterized constructor
-Customer::Customer(int id, const std::string &userName, const std::string &password, 
-                   const std::string &fullName, const std::string &email, 
+Customer::Customer(int id, const std::string &userName, const std::string &password,
+                   const std::string &fullName, const std::string &email,
                    const std::string &phone)
     : BaseUser(id, userName, password, fullName, email), phone(phone) {}
 
-void Customer::bookTicket(const std::string &bookingId) {
+void Customer::bookTicket(const std::string &bookingId)
+{
     bookingIds.push_back(bookingId);
     std::cout << "Ticket booked successfully! Booking ID: " << bookingId << std::endl;
     // TODO: Implement actual booking logic with database
 }
 
-void Customer::viewMyTickets() const {
+void Customer::viewMyTickets() const
+{
     std::cout << "--- My Tickets ---" << std::endl;
-    if (bookingIds.empty()) {
+    if (bookingIds.empty())
+    {
         std::cout << "You have no tickets booked yet." << std::endl;
-    } else {
+    }
+    else
+    {
         std::cout << "Your booked tickets:" << std::endl;
-        for (size_t i = 0; i < bookingIds.size(); ++i) {
+        for (size_t i = 0; i < bookingIds.size(); ++i)
+        {
             std::cout << (i + 1) << ". Booking ID: " << bookingIds[i] << std::endl;
         }
     }
     // TODO: Retrieve actual ticket details from database
 }
 
-void Customer::cancelTicket(const std::string &bookingId) {
+void Customer::cancelTicket(const std::string &bookingId)
+{
     auto it = std::find(bookingIds.begin(), bookingIds.end(), bookingId);
-    if (it != bookingIds.end()) {
+    if (it != bookingIds.end())
+    {
         bookingIds.erase(it);
         std::cout << "Ticket cancellation successful for Booking ID: " << bookingId << std::endl;
         std::cout << "Refund will be processed within 7 business days." << std::endl;
-    } else {
+    }
+    else
+    {
         std::cout << "Booking ID not found: " << bookingId << std::endl;
     }
     // TODO: Implement actual cancellation logic with database
 }
 
-void Customer::browseEvents() const {
+void Customer::browseEvents() const
+{
     std::cout << "--- Browse Available Tickets ---" << std::endl;
     std::cout << "Available Transportation Tickets:" << std::endl;
     std::cout << "1. Cab - City Taxi Service (Available: Now, Price: $25)" << std::endl;
@@ -49,16 +60,19 @@ void Customer::browseEvents() const {
 }
 
 // Getter
-std::string Customer::getPhone() const {
+std::string Customer::getPhone() const
+{
     return phone;
 }
 
 // Setter
-void Customer::setPhone(const std::string &phone) {
+void Customer::setPhone(const std::string &phone)
+{
     this->phone = phone;
 }
 
 // Getter for bookings
-std::vector<std::string> Customer::getBookingIds() const {
+std::vector<std::string> Customer::getBookingIds() const
+{
     return bookingIds;
 }

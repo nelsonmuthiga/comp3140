@@ -2,17 +2,20 @@
 #include <iostream>
 
 // Parameterized constructor
-BaseUser::BaseUser(int id, const std::string &userName, const std::string &password, 
+BaseUser::BaseUser(int id, const std::string &userName, const std::string &password,
                    const std::string &fullName, const std::string &email)
     : id(id), userName(userName), password(password), fullName(fullName), email(email) {}
 
-void BaseUser::updateInfo() {
+void BaseUser::updateInfo()
+{
     std::cout << "Updating user information for: " << userName << std::endl;
     // TODO: Implement update logic
 }
 
-bool BaseUser::login(const std::string &userName, const std::string &password) {
-    if (this->userName == userName && this->password == password) {
+bool BaseUser::login(const std::string &userName, const std::string &password)
+{
+    if (this->userName == userName && this->password == password)
+    {
         std::cout << "Login successful for user: " << userName << std::endl;
         return true;
     }
@@ -20,49 +23,60 @@ bool BaseUser::login(const std::string &userName, const std::string &password) {
     return false;
 }
 
-bool BaseUser::logout() {
+bool BaseUser::logout()
+{
     std::cout << "User " << userName << " logged out successfully." << std::endl;
     return true;
 }
 
 // Getters
-int BaseUser::getId() const {
+int BaseUser::getId() const
+{
     return id;
 }
 
-std::string BaseUser::getUserName() const {
+std::string BaseUser::getUserName() const
+{
     return userName;
 }
 
-std::string BaseUser::getPassword() const {
+std::string BaseUser::getPassword() const
+{
     return password;
 }
 
-std::string BaseUser::getFullName() const {
+std::string BaseUser::getFullName() const
+{
     return fullName;
 }
 
-std::string BaseUser::getEmail() const {
+std::string BaseUser::getEmail() const
+{
     return email;
 }
 
 // Setters
-void BaseUser::setUserName(const std::string &userName) {
+void BaseUser::setUserName(const std::string &userName)
+{
     this->userName = userName;
 }
 
-void BaseUser::setPassword(const std::string &password) {
+void BaseUser::setPassword(const std::string &password)
+{
     this->password = password;
 }
 
-void BaseUser::setFullName(const std::string &fullName) {
+void BaseUser::setFullName(const std::string &fullName)
+{
     this->fullName = fullName;
 }
 
-void BaseUser::setEmail(const std::string &email) {
+void BaseUser::setEmail(const std::string &email)
+{
     this->email = email;
 }
 
-void BaseUser::setId(int id) {
+void BaseUser::setId(int id)
+{
     this->id = id;
 }
