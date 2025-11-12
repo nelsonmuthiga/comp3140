@@ -303,11 +303,9 @@ void registerUser() {
 }
 
 void clearScreen() {
-    #ifdef _WIN32
-        system("cls");
-    #else
-        system("clear");
-    #endif
+    // Use ANSI escape codes to clear the screen and move cursor to home position.
+    // This works on most Unix-like systems and modern Windows terminals.
+    cout << "\033[2J\033[H" << flush;
 }
 
 void pauseScreen() {
