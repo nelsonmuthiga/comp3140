@@ -8,15 +8,15 @@ class Ticket {
 
 	Ticket(); // default constructor
 
-	Ticket(const std::string&, const std::string&, double); // parameterized constructor
+	Ticket(int id, const std::string&, const std::string&, double); // parameterized constructor
 
-	void setEventName(const std::string&); // set event name
+	void setCompanyName(const std::string&); // set event name
 
 	void setDate(const std::string&); // set date
 
 	void setPrice(double); // set price
 
-	std::string getEventName() const; // return event name
+	std::string getCompanyName() const; // return company name
 
 	std::string getDate() const; // return date
 
@@ -26,7 +26,8 @@ class Ticket {
 
 	private:
 
-		std::string eventName;
+		int id;
+		std::string companyName;
 		std::string date;
 		double price;
 };
