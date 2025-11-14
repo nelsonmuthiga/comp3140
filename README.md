@@ -45,7 +45,7 @@ comp3140/
 
 ## Architecture
 
-The system follows a **service-oriented architecture** with clear separation of concerns:
+The system follows a **service-oriented architecture** with clear separation:
 
 ### Entity Layer (Domain Models)
 
@@ -62,12 +62,6 @@ The system follows a **service-oriented architecture** with clear separation of 
 ### Controller Layer
 
 - **main.cpp**: Manages user interactions between services and entities
-
-This architecture ensures:
-
-- ✅ **Entities** focus only on state management
-- ✅ **Services** contain all business logic and rules
-- ✅ **Controllers** orchestrate the flow between layers
 
 ## Requirements
 
