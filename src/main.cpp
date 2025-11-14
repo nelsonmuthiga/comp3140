@@ -452,7 +452,7 @@ void login()
     if (username == "admin" && password == "admin")
     {
         // Create Admin user object
-        currentUser = make_shared<Admin>(1, username, password, "Administrator", "admin@ticketsystem.com", "super");
+        currentUser = make_shared<Admin>(1, username, password, "Administrator", "admin@ticketsystem.com");
         if (currentUser->login(username, password))
         {
             isLoggedIn = true;
@@ -506,7 +506,6 @@ void registerUser()
 void clearScreen()
 {
     // Use ANSI escape codes to clear the screen and move cursor to home position.
-    // This works on most Unix-like systems and modern Windows terminals.
     cout << "\033[2J\033[H" << flush;
 }
 

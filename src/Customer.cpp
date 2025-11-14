@@ -7,7 +7,7 @@ Customer::Customer(int id, const std::string &userName, const std::string &passw
                    const std::string &phone)
     : BaseUser(id, userName, password, fullName, email), phone(phone) {}
 
-// Simple state management - no business logic
+// Simple state management: no business logic
 std::string Customer::getPhone() const
 {
     return phone;

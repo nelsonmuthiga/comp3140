@@ -40,7 +40,7 @@ bool TicketService::updateTicketAvailability(const std::string &ticketType, int 
         return false;
     }
 
-    // Business rule: Cannot have negative availability
+    // NOTE: Cannot have negative availability
     // TODO: Update database with new availability
     std::cout << "Updated availability for " << ticketType << " by " << change << std::endl;
 
@@ -97,7 +97,7 @@ bool TicketService::deleteTicket(const std::string &ticketType)
         return false;
     }
 
-    // Business rule: Check if there are active bookings for this ticket
+    // NOTE: Check if there are active bookings for this ticket
     // TODO: Verify no active bookings before deletion
 
     // TODO: Delete from database

@@ -23,25 +23,51 @@ A console-based ticket booking system built in C++ for COMP 3140. This applicati
 
 ```
 comp3140/
-├── include/          # Header files
-│   ├── BaseUser.h   # Base user class
-│   ├── Admin.h      # Admin class (inherits from BaseUser)
-│   └── Customer.h   # Customer class (inherits from BaseUser)
-├── src/             # Source files
-│   ├── BaseUser.cpp
-│   ├── Admin.cpp
-│   ├── Customer.cpp
-│   └── main.cpp     # Main entry point
-├── obj/             # Object files (generated)
-├── Makefile         # Build configuration
-└── README.md
+├── include/                    # Header files
+│   ├── BaseUser.h             # Base user class
+│   ├── Admin.h                # Admin entity (inherits from BaseUser)
+│   ├── Customer.h             # Customer entity (inherits from BaseUser)
+│   ├── BookingService.h       # Booking business logic
+│   ├── TicketService.h        # Ticket management logic
+│   └── AdminService.h         # Administrative operations logic
+├── src/                       # Source files
+│   ├── BaseUser.cpp           # Base user implementation
+│   ├── Admin.cpp              # Admin entity implementation
+│   ├── Customer.cpp           # Customer entity implementation
+│   ├── BookingService.cpp     # Booking service implementation
+│   ├── TicketService.cpp      # Ticket service implementation
+│   ├── AdminService.cpp       # Admin service implementation
+│   └── main.cpp               # Main entry point and controller
+├── obj/                       # Object files (generated during build)
+├── Makefile                   # Build configuration
+├── README.md                  # This file
 ```
 
-## Class Hierarchy
+## Architecture
+
+The system follows a **service-oriented architecture** with clear separation of concerns:
+
+### Entity Layer (Domain Models)
 
 - **BaseUser**: Base class containing common user properties (id, username, password, fullName, email)
-  - **Admin**: Inherits from BaseUser, adds admin-specific functionality
-  - **Customer**: Inherits from BaseUser, adds customer-specific functionality (phone, bookingIds)
+  - **Admin**: Inherits from BaseUser, manages admin state (adminLevel)
+  - **Customer**: Inherits from BaseUser, manages customer state (phone, bookingIds)
+
+### Service Layer (Business Logic)
+
+- **BookingService**: Handles booking creation, cancellation, validation, and refund calculations
+- **TicketService**: Manages ticket CRUD operations, availability, and browsing
+- **AdminService**: Provides administrative operations, reports, and permission validation
+
+### Controller Layer
+
+- **main.cpp**: Manages user interactions between services and entities
+
+This architecture ensures:
+
+- ✅ **Entities** focus only on state management
+- ✅ **Services** contain all business logic and rules
+- ✅ **Controllers** orchestrate the flow between layers
 
 ## Requirements
 
