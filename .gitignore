@@ -41,4 +41,5 @@
 *.dwo
 
 ticket_system
-obj
+obj/
+
