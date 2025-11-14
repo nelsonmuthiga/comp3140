@@ -94,12 +94,9 @@ std::string AdminService::generateBookingStatistics() const
 bool AdminService::validateAdminAccess(std::shared_ptr<Admin> admin,
                                        const std::string &operation) const
 {
-    if (!admin)
-    {
-        return false;
-    }
-
-    return hasPermission(admin->getAdminLevel(), operation);
+    // All admins have full access since we removed admin levels
+    (void)operation; // Suppress unused parameter warning
+    return admin != nullptr;
 }
 
 void AdminService::displayCustomerList() const
@@ -127,31 +124,6 @@ void AdminService::displayReportsMenu() const
     std::cout << "2. Customer Activity Report" << std::endl;
     std::cout << "3. Booking Statistics" << std::endl;
     std::cout << "4. Back to Admin Menu" << std::endl;
-}
-
-bool AdminService::hasPermission(const std::string &adminLevel,
-                                 const std::string &operation) const
-{
-    // Business rule: Define permission levels
-    if (adminLevel == "super")
-    {
-        // Super admin has all permissions
-        return true;
-    }
-
-    if (adminLevel == "regular")
-    {
-        // Regular admin has limited permissions
-        // Cannot delete tickets or modify critical settings
-        if (operation == "delete_ticket" || operation == "modify_system_settings")
-        {
-            return false;
-        }
-        return true;
-    }
-
-    // Unknown admin level has no permissions
-    return false;
 }
 
 std::string AdminService::formatBookingData() const

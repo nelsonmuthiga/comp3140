@@ -62,15 +62,6 @@ public:
 
 private:
     /**
-     * Check if admin level has permission for operation
-     * @param adminLevel The admin's level (e.g., "super", "regular")
-     * @param operation The operation name
-     * @return true if has permission, false otherwise
-     */
-    bool hasPermission(const std::string &adminLevel,
-                       const std::string &operation) const;
-
-    /**
      * Format booking data for reporting
      * @return Formatted booking data
      */
