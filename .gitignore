@@ -41,5 +41,6 @@
 *.dwo
 
 ticket_system
+ticket_system.exe
 obj/
 
