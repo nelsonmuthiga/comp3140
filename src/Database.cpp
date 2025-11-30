@@ -67,7 +67,7 @@ bool Database::createTables()
     const char *ticketsTableSQL = R"(
         CREATE TABLE IF NOT EXISTS tickets (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            type TEXT UNIQUE NOT NULL,
+            type TEXT NOT NULL,
             description TEXT NOT NULL,
             price REAL NOT NULL CHECK(price > 0),
             availability INTEGER NOT NULL DEFAULT 0 CHECK(availability >= 0),
@@ -114,9 +114,9 @@ bool Database::seedInitialData()
     std::vector<TicketInfo> tickets = getAllTickets();
     if (tickets.empty())
     {
-        createTicket({"Cab", "City Taxi Service", 25.0, 50, "Available Now"});
-        createTicket({"Plane", "Flight to New York", 450.0, 20, "2025-12-01"});
-        createTicket({"Train", "Express to Boston", 85.0, 100, "2025-11-25"});
+        createTicket({0, "Cab", "City Taxi Service", 25.0, 50, "Available Now"});
+        createTicket({0, "Plane", "Flight to New York", 450.0, 20, "2025-12-01"});
+        createTicket({0, "Train", "Express to Boston", 85.0, 100, "2025-11-25"});
     }
 
     return true;
@@ -273,7 +273,7 @@ bool Database::userExists(const std::string &username)
 std::vector<TicketInfo> Database::getAllTickets()
 {
     std::vector<TicketInfo> tickets;
-    const char *sql = "SELECT type, description, price, availability, date FROM tickets;";
+    const char *sql = "SELECT id, type, description, price, availability, date FROM tickets;";
 
     sqlite3_stmt *stmt;
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK)
@@ -284,11 +284,12 @@ std::vector<TicketInfo> Database::getAllTickets()
     while (sqlite3_step(stmt) == SQLITE_ROW)
     {
         TicketInfo ticket;
-        ticket.type = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
-        ticket.description = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1));
-        ticket.price = sqlite3_column_double(stmt, 2);
-        ticket.availability = sqlite3_column_int(stmt, 3);
-        const char *date = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 4));
+        ticket.id = sqlite3_column_int(stmt, 0);
+        ticket.type = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1));
+        ticket.description = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 2));
+        ticket.price = sqlite3_column_double(stmt, 3);
+        ticket.availability = sqlite3_column_int(stmt, 4);
+        const char *date = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 5));
         ticket.date = date ? date : "";
         tickets.push_back(ticket);
     }
@@ -297,10 +298,38 @@ std::vector<TicketInfo> Database::getAllTickets()
     return tickets;
 }
 
+TicketInfo Database::getTicketById(int ticketId)
+{
+    TicketInfo ticket = {0, "", "", 0.0, 0, ""};
+    const char *sql = "SELECT id, type, description, price, availability, date FROM tickets WHERE id = ?;";
+
+    sqlite3_stmt *stmt;
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK)
+    {
+        return ticket;
+    }
+
+    sqlite3_bind_int(stmt, 1, ticketId);
+
+    if (sqlite3_step(stmt) == SQLITE_ROW)
+    {
+        ticket.id = sqlite3_column_int(stmt, 0);
+        ticket.type = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1));
+        ticket.description = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 2));
+        ticket.price = sqlite3_column_double(stmt, 3);
+        ticket.availability = sqlite3_column_int(stmt, 4);
+        const char *date = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 5));
+        ticket.date = date ? date : "";
+    }
+
+    sqlite3_finalize(stmt);
+    return ticket;
+}
+
 TicketInfo Database::getTicketByType(const std::string &type)
 {
-    TicketInfo ticket = {"", "", 0.0, 0, ""};
-    const char *sql = "SELECT type, description, price, availability, date FROM tickets WHERE type = ?;";
+    TicketInfo ticket = {0, "", "", 0.0, 0, ""};
+    const char *sql = "SELECT id, type, description, price, availability, date FROM tickets WHERE type = ? LIMIT 1;";
 
     sqlite3_stmt *stmt;
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK)
@@ -312,11 +341,12 @@ TicketInfo Database::getTicketByType(const std::string &type)
 
     if (sqlite3_step(stmt) == SQLITE_ROW)
     {
-        ticket.type = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
-        ticket.description = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1));
-        ticket.price = sqlite3_column_double(stmt, 2);
-        ticket.availability = sqlite3_column_int(stmt, 3);
-        const char *date = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 4));
+        ticket.id = sqlite3_column_int(stmt, 0);
+        ticket.type = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1));
+        ticket.description = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 2));
+        ticket.price = sqlite3_column_double(stmt, 3);
+        ticket.availability = sqlite3_column_int(stmt, 4);
+        const char *date = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 5));
         ticket.date = date ? date : "";
     }
 
@@ -367,9 +397,9 @@ bool Database::createTicket(const TicketInfo &ticket)
     return success;
 }
 
-bool Database::updateTicketAvailability(const std::string &type, int change)
+bool Database::updateTicketAvailability(int ticketId, int change)
 {
-    const char *sql = "UPDATE tickets SET availability = availability + ? WHERE type = ? AND availability + ? >= 0;";
+    const char *sql = "UPDATE tickets SET availability = availability + ? WHERE id = ? AND availability + ? >= 0;";
 
     sqlite3_stmt *stmt;
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK)
@@ -378,8 +408,47 @@ bool Database::updateTicketAvailability(const std::string &type, int change)
     }
 
     sqlite3_bind_int(stmt, 1, change);
-    sqlite3_bind_text(stmt, 2, type.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int(stmt, 2, ticketId);
     sqlite3_bind_int(stmt, 3, change);
+
+    bool success = sqlite3_step(stmt) == SQLITE_DONE && sqlite3_changes(db) > 0;
+    sqlite3_finalize(stmt);
+    return success;
+}
+
+bool Database::updateTicketById(int ticketId, const TicketInfo &ticket)
+{
+    const char *sql = "UPDATE tickets SET type = ?, description = ?, price = ?, availability = ?, date = ? WHERE id = ?;";
+
+    sqlite3_stmt *stmt;
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK)
+    {
+        return false;
+    }
+
+    sqlite3_bind_text(stmt, 1, ticket.type.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 2, ticket.description.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_double(stmt, 3, ticket.price);
+    sqlite3_bind_int(stmt, 4, ticket.availability);
+    sqlite3_bind_text(stmt, 5, ticket.date.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int(stmt, 6, ticketId);
+
+    bool success = sqlite3_step(stmt) == SQLITE_DONE && sqlite3_changes(db) > 0;
+    sqlite3_finalize(stmt);
+    return success;
+}
+
+bool Database::deleteTicketById(int ticketId)
+{
+    const char *sql = "DELETE FROM tickets WHERE id = ?;";
+
+    sqlite3_stmt *stmt;
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK)
+    {
+        return false;
+    }
+
+    sqlite3_bind_int(stmt, 1, ticketId);
 
     bool success = sqlite3_step(stmt) == SQLITE_DONE && sqlite3_changes(db) > 0;
     sqlite3_finalize(stmt);

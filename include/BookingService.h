@@ -18,14 +18,14 @@ public:
     BookingService() = default;
 
     /**
-     * Create a new booking for a customer
+     * Create a new booking for a customer using ticket ID
      * @param customer The customer making the booking
-     * @param ticketType Type of ticket being booked
+     * @param ticketId Database ID of the ticket being booked
      * @param numTickets Number of tickets to book
      * @return Booking ID if successful, empty string if failed
      */
     std::string createBooking(std::shared_ptr<Customer> customer,
-                              const std::string &ticketType,
+                              int ticketId,
                               int numTickets);
 
     /**
@@ -58,14 +58,6 @@ public:
     std::vector<std::string> getAllBookings() const;
 
 private:
-    /**
-     * Check if ticket type is available for booking
-     * @param ticketType The type of ticket
-     * @param quantity Number of tickets requested
-     * @return true if available, false otherwise
-     */
-    bool isTicketAvailable(const std::string &ticketType, int quantity) const;
-
     /**
      * Check if booking can be cancelled (based on business rules)
      * @param bookingId The booking ID

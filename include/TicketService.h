@@ -9,8 +9,9 @@
  */
 struct TicketInfo
 {
-    std::string type;
-    std::string description;
+    int id;                  // Database ID (0 for new tickets)
+    std::string type;        // Category: Cab, Plane, Train, Bus, etc.
+    std::string description; // Destination/route description
     double price;
     int availability;
     std::string date;
@@ -32,41 +33,49 @@ public:
     std::vector<TicketInfo> getAvailableTickets() const;
 
     /**
-     * Get detailed information about a specific ticket type
+     * Get detailed information about a specific ticket by type (returns first match)
      * @param ticketType The type of ticket
      * @return TicketInfo structure with details
      */
     TicketInfo getTicketDetails(const std::string &ticketType) const;
 
     /**
+     * Get detailed information about a specific ticket by ID
+     * @param ticketId The database ID of the ticket
+     * @return TicketInfo structure with details
+     */
+    TicketInfo getTicketById(int ticketId) const;
+
+    /**
      * Update ticket availability (e.g., after booking or cancellation)
-     * @param ticketType The type of ticket
+     * @param ticketId The database ID of the ticket
      * @param change The change in availability (negative for bookings, positive for cancellations)
      * @return true if update successful, false otherwise
      */
-    bool updateTicketAvailability(const std::string &ticketType, int change);
+    bool updateTicketAvailability(int ticketId, int change);
 
     /**
-     * Create a new ticket type (admin function)
+     * Create a new ticket (admin function)
+     * Multiple tickets of the same type are allowed (e.g., multiple Train tickets to different destinations)
      * @param ticket The ticket information to create
      * @return true if creation successful, false otherwise
      */
     bool createTicket(const TicketInfo &ticket);
 
     /**
-     * Modify an existing ticket type (admin function)
-     * @param ticketType The type of ticket to modify
+     * Modify an existing ticket by ID (admin function)
+     * @param ticketId The database ID of the ticket to modify
      * @param newInfo The new ticket information
      * @return true if modification successful, false otherwise
      */
-    bool modifyTicket(const std::string &ticketType, const TicketInfo &newInfo);
+    bool modifyTicket(int ticketId, const TicketInfo &newInfo);
 
     /**
-     * Delete a ticket type (admin function)
-     * @param ticketType The type of ticket to delete
+     * Delete a ticket by ID (admin function)
+     * @param ticketId The database ID of the ticket to delete
      * @return true if deletion successful, false otherwise
      */
-    bool deleteTicket(const std::string &ticketType);
+    bool deleteTicket(int ticketId);
 
     /**
      * Display all available tickets (for browsing)
@@ -80,13 +89,6 @@ private:
      * @return true if valid, false otherwise
      */
     bool validateTicketInfo(const TicketInfo &ticket) const;
-
-    /**
-     * Check if a ticket type exists
-     * @param ticketType The type of ticket
-     * @return true if exists, false otherwise
-     */
-    bool ticketExists(const std::string &ticketType) const;
 };
 
 #endif
