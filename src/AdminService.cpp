@@ -1,17 +1,29 @@
 #include "AdminService.h"
 #include "Admin.h"
+#include "Database.h"
 #include <iostream>
 #include <sstream>
+#include <iomanip>
+#include <map>
+#include <algorithm>
+#include <vector>
+#include <utility>
 
 std::vector<std::string> AdminService::viewAllCustomers() const
 {
     std::vector<std::string> customers;
 
-    // TODO: Retrieve from database
-    // Placeholder data
-    customers.push_back("ID: 1001 | Name: John Doe | Email: john@example.com | Phone: 555-0101");
-    customers.push_back("ID: 1002 | Name: Jane Smith | Email: jane@example.com | Phone: 555-0102");
-    customers.push_back("ID: 1003 | Name: Mike Jones | Email: mike@example.com | Phone: 555-0103");
+    // Retrieve from database
+    auto customerRecords = Database::getInstance().getAllCustomers();
+
+    for (const auto &record : customerRecords)
+    {
+        std::string customerStr = "ID: " + std::to_string(record.id) +
+                                  " | Name: " + record.fullName +
+                                  " | Email: " + record.email +
+                                  " | Phone: " + record.phone;
+        customers.push_back(customerStr);
+    }
 
     return customers;
 }
@@ -24,23 +36,42 @@ std::string AdminService::generateSalesReport() const
     report << "         SALES REPORT\n";
     report << "========================================\n\n";
 
-    // TODO: Calculate from actual database
-    double totalRevenue = calculateTotalRevenue();
-    int totalBookings = 45;
-    int activeBookings = 38;
-    int cancelledBookings = 7;
+    // Get data from database
+    double totalRevenue = Database::getInstance().getTotalRevenue();
+    int totalBookings = Database::getInstance().getTotalBookings();
+    int activeBookings = Database::getInstance().getActiveBookings();
+    int cancelledBookings = Database::getInstance().getCancelledBookings();
 
+    report << std::fixed << std::setprecision(2);
     report << "Total Revenue:       $" << totalRevenue << "\n";
     report << "Total Bookings:      " << totalBookings << "\n";
     report << "Active Bookings:     " << activeBookings << "\n";
     report << "Cancelled Bookings:  " << cancelledBookings << "\n\n";
 
-    report << "Breakdown by Ticket Type:\n";
-    report << "  Cab:    15 bookings | Revenue: $375\n";
-    report << "  Plane:  10 bookings | Revenue: $4,500\n";
-    report << "  Train:  20 bookings | Revenue: $1,700\n\n";
+    // Get ticket breakdown from all bookings
+    auto allBookings = Database::getInstance().getAllBookings();
+    std::map<std::string, std::pair<int, double>> ticketBreakdown;
 
-    report << "========================================\n";
+    for (const auto &booking : allBookings)
+    {
+        if (booking.status == "active")
+        {
+            ticketBreakdown[booking.ticketType].first += booking.numTickets;
+            ticketBreakdown[booking.ticketType].second += booking.totalPrice;
+        }
+    }
+
+    report << "Breakdown by Ticket Type:\n";
+    for (const auto &entry : ticketBreakdown)
+    {
+        report << "  " << entry.first << ": " << entry.second.first
+               << " tickets | Revenue: $" << entry.second.second << "\n";
+    }
+    if (ticketBreakdown.empty())
+    {
+        report << "  No active bookings yet.\n";
+    }
+    report << "\n========================================\n";
 
     return report.str();
 }
@@ -53,17 +84,39 @@ std::string AdminService::generateCustomerReport() const
     report << "       CUSTOMER ACTIVITY REPORT\n";
     report << "========================================\n\n";
 
-    // TODO: Calculate from actual database
-    report << "Total Registered Customers: 127\n";
-    report << "Active Customers (last 30 days): 89\n";
-    report << "New Customers (this month): 12\n\n";
+    // Get data from database
+    int totalCustomers = Database::getInstance().getTotalCustomers();
+    auto customers = Database::getInstance().getAllCustomers();
+
+    report << "Total Registered Customers: " << totalCustomers << "\n\n";
+
+    // Get booking counts per customer
+    std::vector<std::pair<std::string, int>> customerBookings;
+    for (const auto &customer : customers)
+    {
+        auto bookings = Database::getInstance().getBookingsByUserId(customer.id);
+        customerBookings.push_back({customer.fullName, static_cast<int>(bookings.size())});
+    }
+
+    // Sort by booking count (descending)
+    std::sort(customerBookings.begin(), customerBookings.end(),
+              [](const std::pair<std::string, int> &a, const std::pair<std::string, int> &b)
+              { return a.second > b.second; });
 
     report << "Top Customers by Bookings:\n";
-    report << "  1. John Doe - 8 bookings\n";
-    report << "  2. Jane Smith - 6 bookings\n";
-    report << "  3. Mike Jones - 5 bookings\n\n";
-
-    report << "========================================\n";
+    int rank = 1;
+    for (const auto &entry : customerBookings)
+    {
+        if (rank > 5)
+            break; // Show top 5
+        report << "  " << rank << ". " << entry.first << " - " << entry.second << " bookings\n";
+        rank++;
+    }
+    if (customerBookings.empty())
+    {
+        report << "  No customers with bookings yet.\n";
+    }
+    report << "\n========================================\n";
 
     return report.str();
 }
@@ -76,15 +129,37 @@ std::string AdminService::generateBookingStatistics() const
     report << "      BOOKING STATISTICS\n";
     report << "========================================\n\n";
 
-    // TODO: Calculate from actual database
-    report << "Average Booking Value: $145.50\n";
-    report << "Average Tickets per Booking: 2.3\n";
-    report << "Peak Booking Hours: 10 AM - 2 PM\n";
-    report << "Cancellation Rate: 15.6%\n\n";
+    // Get data from database
+    int totalBookings = Database::getInstance().getTotalBookings();
+    int cancelledBookings = Database::getInstance().getCancelledBookings();
+    double totalRevenue = Database::getInstance().getTotalRevenue();
+    int activeBookings = Database::getInstance().getActiveBookings();
 
-    report << "Monthly Trend:\n";
-    report << "  October:  38 bookings\n";
-    report << "  November: 45 bookings (current)\n\n";
+    // Calculate statistics
+    double avgBookingValue = (activeBookings > 0) ? (totalRevenue / activeBookings) : 0.0;
+    double cancellationRate = (totalBookings > 0) ? (static_cast<double>(cancelledBookings) / totalBookings * 100) : 0.0;
+
+    // Calculate average tickets per booking
+    auto allBookings = Database::getInstance().getAllBookings();
+    int totalTickets = 0;
+    for (const auto &booking : allBookings)
+    {
+        if (booking.status == "active")
+        {
+            totalTickets += booking.numTickets;
+        }
+    }
+    double avgTicketsPerBooking = (activeBookings > 0) ? (static_cast<double>(totalTickets) / activeBookings) : 0.0;
+
+    report << std::fixed << std::setprecision(2);
+    report << "Average Booking Value: $" << avgBookingValue << "\n";
+    report << "Average Tickets per Booking: " << avgTicketsPerBooking << "\n";
+    report << "Cancellation Rate: " << cancellationRate << "%\n\n";
+
+    report << "Booking Summary:\n";
+    report << "  Total Bookings: " << totalBookings << "\n";
+    report << "  Active Bookings: " << activeBookings << "\n";
+    report << "  Cancelled Bookings: " << cancelledBookings << "\n\n";
 
     report << "========================================\n";
 
@@ -134,7 +209,6 @@ std::string AdminService::formatBookingData() const
 
 double AdminService::calculateTotalRevenue() const
 {
-    // TODO: Calculate from actual bookings in database
-    // Placeholder calculation
-    return 6575.00;
+    // Get total revenue from database
+    return Database::getInstance().getTotalRevenue();
 }

@@ -1,23 +1,53 @@
 # Ticket Booking System
 
-A console-based ticket booking system built in C++ for COMP 3140. This application allows customers to book transportation tickets and provides administrative functions for managing the system.
+A console-based ticket booking system built in C++ for COMP 3140. This application allows customers to book transportation tickets (Cab, Plane, Train) and provides administrative functions for managing the system.
 
 ## Features
 
 ### Customer Features
 
-- User registration and login
-- Browse available tickets
-- Book tickets
-- View booked tickets
-- Cancel ticket bookings
+- ✅ User registration and login with database persistence
+- ✅ Browse available tickets
+- ✅ Book tickets with automatic availability tracking
+- ✅ View booked tickets
+- ✅ Cancel ticket bookings with refund calculation
 
 ### Admin Features
 
-- View all ticket bookings in the system
-- Manage tickets (add, edit, delete)
-- View customer list
-- Generate reports
+- ✅ View all ticket bookings in the system
+- ✅ Manage tickets (add, edit, delete)
+- ✅ View customer list
+- ✅ Generate reports (Sales, Customer Activity, Booking Statistics)
+
+### Database Features
+
+- ✅ SQLite3 integration for persistent storage
+- ✅ Automatic database initialization and table creation
+- ✅ Seed data for default tickets and admin user
+
+## Quick Start
+
+```bash
+# Build the project
+make
+
+# Run the application
+./ticket_system      # Linux/Mac
+ticket_system.exe    # Windows
+```
+
+### Default Login Credentials
+
+| Role     | Username               | Password |
+| -------- | ---------------------- | -------- |
+| Admin    | `admin`                | `admin`  |
+| Customer | Register a new account |
+
+## Documentation
+
+- [User Guide](docs/USER_GUIDE.md) - How to use the application
+- [Database Schema](docs/DATABASE.md) - Database structure and queries
+- [Architecture](docs/ARCHITECTURE.md) - System design and code structure
 
 ## Project Structure
 
@@ -25,99 +55,53 @@ A console-based ticket booking system built in C++ for COMP 3140. This applicati
 comp3140/
 ├── include/                    # Header files
 │   ├── BaseUser.h             # Base user class
-│   ├── Admin.h                # Admin entity (inherits from BaseUser)
-│   ├── Customer.h             # Customer entity (inherits from BaseUser)
+│   ├── Admin.h                # Admin entity
+│   ├── Customer.h             # Customer entity
+│   ├── Database.h             # SQLite database wrapper
 │   ├── BookingService.h       # Booking business logic
 │   ├── TicketService.h        # Ticket management logic
-│   └── AdminService.h         # Administrative operations logic
+│   ├── AdminService.h         # Administrative operations
+│   ├── sqlite3.h              # SQLite3 header
+│   └── sqlite3.c              # SQLite3 amalgamation
 ├── src/                       # Source files
+│   ├── main.cpp               # Entry point and UI controller
+│   ├── Database.cpp           # Database implementation
 │   ├── BaseUser.cpp           # Base user implementation
-│   ├── Admin.cpp              # Admin entity implementation
-│   ├── Customer.cpp           # Customer entity implementation
+│   ├── Admin.cpp              # Admin implementation
+│   ├── Customer.cpp           # Customer implementation
 │   ├── BookingService.cpp     # Booking service implementation
 │   ├── TicketService.cpp      # Ticket service implementation
-│   ├── AdminService.cpp       # Admin service implementation
-│   └── main.cpp               # Main entry point and controller
-├── obj/                       # Object files (generated during build)
+│   └── AdminService.cpp       # Admin service implementation
+├── obj/                       # Compiled object files
+├── docs/                      # Documentation
+├── ticketsystem.db            # SQLite database (auto-generated)
 ├── Makefile                   # Build configuration
-├── README.md                  # This file
+└── README.md                  # This file
 ```
-
-## Architecture
-
-The system follows a **service-oriented architecture** with clear separation:
-
-### Entity Layer (Domain Models)
-
-- **BaseUser**: Base class containing common user properties (id, username, password, fullName, email)
-  - **Admin**: Inherits from BaseUser, manages admin state (adminLevel)
-  - **Customer**: Inherits from BaseUser, manages customer state (phone, bookingIds)
-
-### Service Layer (Business Logic)
-
-- **BookingService**: Handles booking creation, cancellation, validation, and refund calculations
-- **TicketService**: Manages ticket CRUD operations, availability, and browsing
-- **AdminService**: Provides administrative operations, reports, and permission validation
-
-### Controller Layer
-
-- **main.cpp**: Manages user interactions between services and entities
 
 ## Requirements
 
-- C++ compiler with C++11 support (g++)
-- Make
+- C++ compiler with C++17 support (g++ recommended)
+- Make build system
+- No external dependencies (SQLite3 is bundled)
 
-## Building the Project
-
-To compile the project, run:
-
-```bash
-make
-```
-
-Other make commands:
+## Building
 
 ```bash
-make rebuild  # Clean and rebuild from scratch
-make clean    # Remove build files
-make run      # Compile and run the program
+make            # Build the project
+make clean      # Remove build files
+make rebuild    # Clean and rebuild
+make run        # Build and run
 ```
 
-## Running the Application
+## Technology Stack
 
-After building, run the executable:
+- **Language**: C++17
+- **Database**: SQLite3 (embedded)
+- **Build System**: Make
+- **Architecture**: Service-oriented with MVC pattern
 
-```bash
-./ticket_system
-```
-
-## Usage
-
-### Demo Login Credentials
-
-**Admin Access:**
-
-- Username: `admin`
-- Password: `admin`
-
-**Customer Access:**
-
-- Any non-empty username and password combination
-
-### Navigation
-
-The application uses a menu-driven interface. Enter the number corresponding to your desired action and press Enter.
-
-## Development Status
-
-This is currently a skeleton POC (Proof of Concept). The following features are planned for future implementation:
-
-- Database integration for persistent storage
-- Actual authentication system
-- Real event management
-
-## Author
+## Authors
 
 Nelson Muthiga & Utsav Shakya
 

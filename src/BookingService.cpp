@@ -1,5 +1,6 @@
 #include "BookingService.h"
 #include "Customer.h"
+#include "Database.h"
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
@@ -16,26 +17,44 @@ std::string BookingService::createBooking(std::shared_ptr<Customer> customer,
         return "";
     }
 
-    // Business rule: Check ticket availability
-    if (!isTicketAvailable(ticketType, numTickets))
+    // Business rule: Check ticket availability from database
+    TicketInfo ticket = Database::getInstance().getTicketByType(ticketType);
+    if (ticket.type.empty() || ticket.availability < numTickets)
     {
         std::cout << "Error: Insufficient tickets available." << std::endl;
         return "";
     }
 
-    // Generate unique booking ID
-    std::string bookingId = generateBookingId();
+    // Get ticket ID for booking
+    int ticketId = Database::getInstance().getTicketIdByType(ticketType);
+    if (ticketId < 0)
+    {
+        std::cout << "Error: Ticket type not found." << std::endl;
+        return "";
+    }
 
-    // Business logic: Process booking
+    // Calculate total price
+    double totalPrice = ticket.price * numTickets;
+
+    // Create booking in database
+    std::string bookingId = Database::getInstance().createBooking(
+        customer->getId(), ticketId, ticketType, numTickets, totalPrice);
+
+    if (bookingId.empty())
+    {
+        std::cout << "Error: Failed to create booking." << std::endl;
+        return "";
+    }
+
+    // Update ticket availability (decrease by numTickets)
+    Database::getInstance().updateTicketAvailability(ticketType, -numTickets);
+
+    // Display booking confirmation
     std::cout << "Processing booking..." << std::endl;
     std::cout << "Ticket Type: " << ticketType << std::endl;
     std::cout << "Number of Tickets: " << numTickets << std::endl;
+    std::cout << "Total Price: $" << totalPrice << std::endl;
     std::cout << "Booking ID: " << bookingId << std::endl;
-
-    // TODO: Update database with booking information
-    // TODO: Process payment
-    // TODO: Update ticket availability
-
     std::cout << "Booking created successfully!" << std::endl;
 
     return bookingId;
@@ -50,31 +69,44 @@ bool BookingService::cancelBooking(const std::string &bookingId,
         return false;
     }
 
-    // Business rule: Validate booking ownership
-    auto bookings = customer->getBookingIds();
-    if (std::find(bookings.begin(), bookings.end(), bookingId) == bookings.end())
+    // Get booking from database to validate ownership
+    BookingRecord booking = Database::getInstance().getBookingById(bookingId);
+    if (booking.bookingId.empty())
+    {
+        std::cout << "Error: Booking not found." << std::endl;
+        return false;
+    }
+
+    // Validate booking belongs to this customer
+    if (booking.userId != customer->getId())
     {
         std::cout << "Error: Booking ID not found for this customer." << std::endl;
         return false;
     }
 
-    // Business rule: Check if cancellation is allowed
-    if (!canCancelBooking(bookingId))
+    // Check if already cancelled
+    if (booking.status == "cancelled")
     {
-        std::cout << "Error: This booking cannot be cancelled at this time." << std::endl;
+        std::cout << "Error: Booking is already cancelled." << std::endl;
         return false;
     }
 
-    // Calculate refund
-    double refundAmount = calculateRefund(bookingId);
+    // Calculate refund (80% of total price)
+    double refundAmount = booking.totalPrice * 0.80;
+
+    // Cancel booking in database
+    if (!Database::getInstance().cancelBooking(bookingId))
+    {
+        std::cout << "Error: Failed to cancel booking." << std::endl;
+        return false;
+    }
+
+    // Restore ticket availability
+    Database::getInstance().updateTicketAvailability(booking.ticketType, booking.numTickets);
 
     std::cout << "Cancelling booking: " << bookingId << std::endl;
     std::cout << "Refund amount: $" << refundAmount << std::endl;
     std::cout << "Refund will be processed within 7 business days." << std::endl;
-
-    // TODO: Update database
-    // TODO: Process refund
-    // TODO: Update ticket availability
 
     return true;
 }
@@ -83,10 +115,18 @@ std::vector<std::string> BookingService::getCustomerBookings(int customerId) con
 {
     std::vector<std::string> bookings;
 
-    // TODO: Retrieve from database
-    // For now, return placeholder data
-    bookings.push_back("Booking ID: BK1001 | Type: Cab | Tickets: 1 | Status: Active");
-    bookings.push_back("Booking ID: BK1002 | Type: Train | Tickets: 2 | Status: Active");
+    // Retrieve from database
+    auto bookingRecords = Database::getInstance().getBookingsByUserId(customerId);
+
+    for (const auto &record : bookingRecords)
+    {
+        std::string bookingStr = "Booking ID: " + record.bookingId +
+                                 " | Type: " + record.ticketType +
+                                 " | Tickets: " + std::to_string(record.numTickets) +
+                                 " | Price: $" + std::to_string(record.totalPrice) +
+                                 " | Status: " + record.status;
+        bookings.push_back(bookingStr);
+    }
 
     return bookings;
 }
@@ -98,55 +138,64 @@ bool BookingService::validateBooking(const std::string &bookingId) const
         return false;
     }
 
-    // TODO: Check database for booking validity
-    // For now, simple validation
-    return bookingId.length() >= 4 && bookingId.substr(0, 2) == "BK";
+    // Check database for booking validity
+    return Database::getInstance().bookingExists(bookingId);
 }
 
 std::vector<std::string> BookingService::getAllBookings() const
 {
     std::vector<std::string> allBookings;
 
-    // TODO: Retrieve all bookings from database
-    // Placeholder data for demonstration
-    allBookings.push_back("User: john_doe | Booking ID: BK1234 | Type: Plane | Tickets: 2 | Status: Active");
-    allBookings.push_back("User: jane_smith | Booking ID: BK5678 | Type: Train | Tickets: 1 | Status: Active");
-    allBookings.push_back("User: mike_jones | Booking ID: BK9012 | Type: Cab | Tickets: 4 | Status: Cancelled");
+    // Retrieve all bookings from database
+    auto bookingRecords = Database::getInstance().getAllBookings();
+
+    for (const auto &record : bookingRecords)
+    {
+        std::string bookingStr = "User: " + record.userName +
+                                 " | Booking ID: " + record.bookingId +
+                                 " | Type: " + record.ticketType +
+                                 " | Tickets: " + std::to_string(record.numTickets) +
+                                 " | Price: $" + std::to_string(record.totalPrice) +
+                                 " | Status: " + record.status;
+        allBookings.push_back(bookingStr);
+    }
 
     return allBookings;
 }
 
 bool BookingService::isTicketAvailable(const std::string &ticketType, int quantity) const
 {
-    // TODO: Check actual availability from database
-    // Business rule: Validate ticket type and quantity
+    // Business rule: Validate quantity
     if (quantity <= 0 || quantity > 10)
     {
         return false;
     }
 
-    // For now, assume all types are available with limited quantity
-    return !ticketType.empty();
+    // Check actual availability from database
+    TicketInfo ticket = Database::getInstance().getTicketByType(ticketType);
+    return !ticket.type.empty() && ticket.availability >= quantity;
 }
 
 bool BookingService::canCancelBooking(const std::string &bookingId) const
 {
-    // Business rule: Check cancellation policy
-    // TODO: Check booking date, time, and cancellation policy
-    // For now, allow all cancellations
-    return validateBooking(bookingId);
+    // Check if booking exists and is active
+    BookingRecord booking = Database::getInstance().getBookingById(bookingId);
+    return !booking.bookingId.empty() && booking.status == "active";
 }
 
 double BookingService::calculateRefund(const std::string &bookingId) const
 {
-    // Business rule: Refund calculation based on cancellation policy
-    // TODO: Implement actual refund calculation based on booking details
+    // Get booking from database
+    BookingRecord booking = Database::getInstance().getBookingById(bookingId);
 
-    // Placeholder: 80% refund for demo purposes
-    double bookingAmount = 100.0; // TODO: Get from database
+    if (booking.bookingId.empty())
+    {
+        return 0.0;
+    }
+
+    // Business rule: 80% refund
     double refundPercentage = 0.80;
-
-    return bookingAmount * refundPercentage;
+    return booking.totalPrice * refundPercentage;
 }
 
 std::string BookingService::generateBookingId() const
