@@ -10,11 +10,11 @@
 struct TicketInfo
 {
     int id;                  // Database ID (0 for new tickets)
-    std::string type;        // Category: Cab, Plane, Train, Bus, etc.
+    std::string type;        // Category: Cab, Plane, Train.
     std::string description; // Destination/route description
-    double price;
-    int availability;
-    std::string date;
+    double price;            // Price of the ticket
+    int availability;        // Number of tickets available
+    std::string date;        // Date of travel or availability (format: YYYY-MM-DD or descriptive text)
 };
 
 /**
