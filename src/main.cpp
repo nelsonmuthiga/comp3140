@@ -225,7 +225,7 @@ void handleCustomerMenu(shared_ptr<Customer> customer)
             // Use BookingService to create booking
             string bookingId = bookingService.createBooking(
                 customer,
-                tickets[ticketChoice - 1].type,
+                tickets[ticketChoice - 1].id,
                 numTickets);
 
             if (!bookingId.empty())
@@ -362,9 +362,10 @@ void handleAdminMenu(shared_ptr<Admin> admin)
                 case 1:
                 {
                     TicketInfo newTicket;
-                    cout << "Enter ticket type: ";
+                    newTicket.id = 0; // New ticket, ID will be auto-generated
+                    cout << "Enter ticket type (e.g., Train, Plane, Bus, Cab): ";
                     cin >> newTicket.type;
-                    cout << "Enter description: ";
+                    cout << "Enter description (destination/route): ";
                     cin.ignore();
                     getline(cin, newTicket.description);
                     cout << "Enter price: ";
@@ -388,34 +389,43 @@ void handleAdminMenu(shared_ptr<Admin> admin)
                     ticketService.displayAvailableTickets();
                     cout << endl;
 
-                    string ticketType;
-                    cout << "Enter ticket type to edit: ";
-                    cin >> ticketType;
+                    int ticketId;
+                    cout << "Enter ticket ID to edit: ";
+                    cin >> ticketId;
 
-                    TicketInfo existingTicket = ticketService.getTicketDetails(ticketType);
-                    if (existingTicket.type.empty())
+                    if (cin.fail())
                     {
-                        cout << "Error: Ticket type not found." << endl;
+                        cin.clear();
+                        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                        cout << "Error: Invalid ticket ID." << endl;
                         break;
                     }
 
+                    TicketInfo existingTicket = ticketService.getTicketById(ticketId);
+                    if (existingTicket.id == 0)
+                    {
+                        cout << "Error: Ticket not found." << endl;
+                        break;
+                    }
+
+                    cout << "Editing: " << existingTicket.type << " - " << existingTicket.description << endl;
+
                     TicketInfo updatedTicket;
-                    updatedTicket.type = ticketType;
+                    updatedTicket.id = ticketId;
+                    cout << "Enter new type (current: " << existingTicket.type << "): ";
+                    cin >> updatedTicket.type;
                     cout << "Enter new description: ";
                     cin.ignore();
                     getline(cin, updatedTicket.description);
-                    cout << "Enter new price: ";
+                    cout << "Enter new price (current: $" << existingTicket.price << "): ";
                     cin >> updatedTicket.price;
-                    cout << "Enter new availability: ";
+                    cout << "Enter new availability (current: " << existingTicket.availability << "): ";
                     cin >> updatedTicket.availability;
                     cout << "Enter new date: ";
                     cin.ignore();
                     getline(cin, updatedTicket.date);
 
-                    if (ticketService.modifyTicket(ticketType, updatedTicket))
-                    {
-                        cout << "Ticket updated successfully!" << endl;
-                    }
+                    ticketService.modifyTicket(ticketId, updatedTicket);
                     break;
                 }
                 case 3:
@@ -425,27 +435,33 @@ void handleAdminMenu(shared_ptr<Admin> admin)
                     ticketService.displayAvailableTickets();
                     cout << endl;
 
-                    string ticketType;
-                    cout << "Enter ticket type to delete: ";
-                    cin >> ticketType;
+                    int ticketId;
+                    cout << "Enter ticket ID to delete: ";
+                    cin >> ticketId;
 
-                    TicketInfo existingTicket = ticketService.getTicketDetails(ticketType);
-                    if (existingTicket.type.empty())
+                    if (cin.fail())
                     {
-                        cout << "Error: Ticket type not found." << endl;
+                        cin.clear();
+                        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                        cout << "Error: Invalid ticket ID." << endl;
                         break;
                     }
 
-                    cout << "Are you sure you want to delete '" << ticketType << "'? (y/n): ";
+                    TicketInfo existingTicket = ticketService.getTicketById(ticketId);
+                    if (existingTicket.id == 0)
+                    {
+                        cout << "Error: Ticket not found." << endl;
+                        break;
+                    }
+
+                    cout << "Are you sure you want to delete '" << existingTicket.type
+                         << " - " << existingTicket.description << "'? (y/n): ";
                     char confirm;
                     cin >> confirm;
 
                     if (confirm == 'y' || confirm == 'Y')
                     {
-                        if (ticketService.deleteTicket(ticketType))
-                        {
-                            cout << "Ticket deleted successfully!" << endl;
-                        }
+                        ticketService.deleteTicket(ticketId);
                     }
                     else
                     {

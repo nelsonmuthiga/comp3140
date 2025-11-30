@@ -7,7 +7,7 @@
 #include <algorithm>
 
 std::string BookingService::createBooking(std::shared_ptr<Customer> customer,
-                                          const std::string &ticketType,
+                                          int ticketId,
                                           int numTickets)
 {
     // Validate inputs
@@ -18,18 +18,16 @@ std::string BookingService::createBooking(std::shared_ptr<Customer> customer,
     }
 
     // Business rule: Check ticket availability from database
-    TicketInfo ticket = Database::getInstance().getTicketByType(ticketType);
-    if (ticket.type.empty() || ticket.availability < numTickets)
+    TicketInfo ticket = Database::getInstance().getTicketById(ticketId);
+    if (ticket.id == 0)
     {
-        std::cout << "Error: Insufficient tickets available." << std::endl;
+        std::cout << "Error: Ticket not found." << std::endl;
         return "";
     }
 
-    // Get ticket ID for booking
-    int ticketId = Database::getInstance().getTicketIdByType(ticketType);
-    if (ticketId < 0)
+    if (ticket.availability < numTickets)
     {
-        std::cout << "Error: Ticket type not found." << std::endl;
+        std::cout << "Error: Insufficient tickets available (only " << ticket.availability << " left)." << std::endl;
         return "";
     }
 
@@ -38,7 +36,7 @@ std::string BookingService::createBooking(std::shared_ptr<Customer> customer,
 
     // Create booking in database
     std::string bookingId = Database::getInstance().createBooking(
-        customer->getId(), ticketId, ticketType, numTickets, totalPrice);
+        customer->getId(), ticket.id, ticket.type, numTickets, totalPrice);
 
     if (bookingId.empty())
     {
@@ -47,11 +45,12 @@ std::string BookingService::createBooking(std::shared_ptr<Customer> customer,
     }
 
     // Update ticket availability (decrease by numTickets)
-    Database::getInstance().updateTicketAvailability(ticketType, -numTickets);
+    Database::getInstance().updateTicketAvailability(ticket.id, -numTickets);
 
     // Display booking confirmation
     std::cout << "Processing booking..." << std::endl;
-    std::cout << "Ticket Type: " << ticketType << std::endl;
+    std::cout << "Ticket: " << ticket.type << " - " << ticket.description << std::endl;
+    std::cout << "Date: " << ticket.date << std::endl;
     std::cout << "Number of Tickets: " << numTickets << std::endl;
     std::cout << "Total Price: $" << totalPrice << std::endl;
     std::cout << "Booking ID: " << bookingId << std::endl;
@@ -101,8 +100,8 @@ bool BookingService::cancelBooking(const std::string &bookingId,
         return false;
     }
 
-    // Restore ticket availability
-    Database::getInstance().updateTicketAvailability(booking.ticketType, booking.numTickets);
+    // Restore ticket availability using ticket ID from booking
+    Database::getInstance().updateTicketAvailability(booking.ticketId, booking.numTickets);
 
     std::cout << "Cancelling booking: " << bookingId << std::endl;
     std::cout << "Refund amount: $" << refundAmount << std::endl;
@@ -161,19 +160,6 @@ std::vector<std::string> BookingService::getAllBookings() const
     }
 
     return allBookings;
-}
-
-bool BookingService::isTicketAvailable(const std::string &ticketType, int quantity) const
-{
-    // Business rule: Validate quantity
-    if (quantity <= 0 || quantity > 10)
-    {
-        return false;
-    }
-
-    // Check actual availability from database
-    TicketInfo ticket = Database::getInstance().getTicketByType(ticketType);
-    return !ticket.type.empty() && ticket.availability >= quantity;
 }
 
 bool BookingService::canCancelBooking(const std::string &bookingId) const

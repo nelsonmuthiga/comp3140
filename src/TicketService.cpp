@@ -11,22 +11,27 @@ std::vector<TicketInfo> TicketService::getAvailableTickets() const
 
 TicketInfo TicketService::getTicketDetails(const std::string &ticketType) const
 {
-    // Retrieve specific ticket from database
+    // Retrieve specific ticket from database (returns first match)
     return Database::getInstance().getTicketByType(ticketType);
 }
 
-bool TicketService::updateTicketAvailability(const std::string &ticketType, int change)
+TicketInfo TicketService::getTicketById(int ticketId) const
 {
-    if (!ticketExists(ticketType))
+    return Database::getInstance().getTicketById(ticketId);
+}
+
+bool TicketService::updateTicketAvailability(int ticketId, int change)
+{
+    TicketInfo ticket = Database::getInstance().getTicketById(ticketId);
+    if (ticket.id == 0)
     {
-        std::cout << "Error: Ticket type does not exist." << std::endl;
+        std::cout << "Error: Ticket not found." << std::endl;
         return false;
     }
 
     // Update database with new availability
-    if (Database::getInstance().updateTicketAvailability(ticketType, change))
+    if (Database::getInstance().updateTicketAvailability(ticketId, change))
     {
-        std::cout << "Updated availability for " << ticketType << " by " << change << std::endl;
         return true;
     }
     else
@@ -45,17 +50,12 @@ bool TicketService::createTicket(const TicketInfo &ticket)
         return false;
     }
 
-    // Business rule: Check if ticket type already exists
-    if (ticketExists(ticket.type))
-    {
-        std::cout << "Error: Ticket type already exists." << std::endl;
-        return false;
-    }
+    // No duplicate check - multiple tickets of same type allowed (e.g., Train to Boston, Train to Chicago)
 
     // Insert into database
     if (Database::getInstance().createTicket(ticket))
     {
-        std::cout << "Ticket created successfully: " << ticket.type << std::endl;
+        std::cout << "Ticket created successfully: " << ticket.type << " - " << ticket.description << std::endl;
         return true;
     }
     else
@@ -65,11 +65,12 @@ bool TicketService::createTicket(const TicketInfo &ticket)
     }
 }
 
-bool TicketService::modifyTicket(const std::string &ticketType, const TicketInfo &newInfo)
+bool TicketService::modifyTicket(int ticketId, const TicketInfo &newInfo)
 {
-    if (!ticketExists(ticketType))
+    TicketInfo existing = Database::getInstance().getTicketById(ticketId);
+    if (existing.id == 0)
     {
-        std::cout << "Error: Ticket type does not exist." << std::endl;
+        std::cout << "Error: Ticket not found." << std::endl;
         return false;
     }
 
@@ -79,10 +80,9 @@ bool TicketService::modifyTicket(const std::string &ticketType, const TicketInfo
         return false;
     }
 
-    // Delete old ticket and create new one (simple update approach)
-    if (Database::getInstance().deleteTicket(ticketType) && Database::getInstance().createTicket(newInfo))
+    if (Database::getInstance().updateTicketById(ticketId, newInfo))
     {
-        std::cout << "Ticket modified successfully: " << ticketType << std::endl;
+        std::cout << "Ticket modified successfully!" << std::endl;
         return true;
     }
     else
@@ -92,18 +92,19 @@ bool TicketService::modifyTicket(const std::string &ticketType, const TicketInfo
     }
 }
 
-bool TicketService::deleteTicket(const std::string &ticketType)
+bool TicketService::deleteTicket(int ticketId)
 {
-    if (!ticketExists(ticketType))
+    TicketInfo existing = Database::getInstance().getTicketById(ticketId);
+    if (existing.id == 0)
     {
-        std::cout << "Error: Ticket type does not exist." << std::endl;
+        std::cout << "Error: Ticket not found." << std::endl;
         return false;
     }
 
     // Delete from database
-    if (Database::getInstance().deleteTicket(ticketType))
+    if (Database::getInstance().deleteTicketById(ticketId))
     {
-        std::cout << "Ticket deleted successfully: " << ticketType << std::endl;
+        std::cout << "Ticket deleted successfully!" << std::endl;
         return true;
     }
     else
@@ -126,7 +127,7 @@ void TicketService::displayAvailableTickets() const
 
     for (size_t i = 0; i < tickets.size(); ++i)
     {
-        std::cout << (i + 1) << ". " << tickets[i].type
+        std::cout << (i + 1) << ". [ID:" << tickets[i].id << "] " << tickets[i].type
                   << " - " << tickets[i].description
                   << " (Date: " << tickets[i].date
                   << ", Price: $" << tickets[i].price
@@ -153,10 +154,4 @@ bool TicketService::validateTicketInfo(const TicketInfo &ticket) const
     }
 
     return true;
-}
-
-bool TicketService::ticketExists(const std::string &ticketType) const
-{
-    // Check database for ticket existence
-    return Database::getInstance().ticketExists(ticketType);
 }
