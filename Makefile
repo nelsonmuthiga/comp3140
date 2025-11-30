@@ -8,22 +8,19 @@ INCLUDE_DIR = include
 
 # OS detection
 ifeq ($(OS),Windows_NT)
-	RM = cmd /C "rmdir /s /q"
-	RM_FILE = cmd /C "del /q"
-	MKDIR = cmd /C "if not exist $(OBJ_DIR) mkdir $(OBJ_DIR)"
+	MKDIR = powershell -Command "if (!(Test-Path '$(OBJ_DIR)')) { New-Item -ItemType Directory -Path '$(OBJ_DIR)' | Out-Null }"
+	RM = powershell -Command "Remove-Item -Recurse -Force -ErrorAction SilentlyContinue '$(OBJ_DIR)', '$(TARGET)'; exit 0"
 	TARGET = ticket_system.exe
-	RUN = $(TARGET)
+	RUN = ./$(TARGET)
 else
-	RM = rm -rf
-	RM_FILE = rm -f
 	MKDIR = mkdir -p $(OBJ_DIR)
+	RM = rm -rf $(OBJ_DIR) $(TARGET)
 	TARGET = ticket_system
 	RUN = ./$(TARGET)
 endif
 
 SOURCES = $(wildcard $(SRC_DIR)/*.cpp)
 OBJECTS = $(SOURCES:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
-# Add sqlite3.c object
 OBJECTS += $(OBJ_DIR)/sqlite3.o
 
 all: $(TARGET)
@@ -35,7 +32,6 @@ $(TARGET): $(OBJECTS)
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# Compile sqlite3.c from include folder
 $(OBJ_DIR)/sqlite3.o: $(INCLUDE_DIR)/sqlite3.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
@@ -43,12 +39,7 @@ $(OBJ_DIR):
 	$(MKDIR)
 
 clean:
-ifeq ($(OS),Windows_NT)
-	@if exist $(OBJ_DIR) $(RM) $(OBJ_DIR)
-	@if exist $(TARGET) $(RM_FILE) $(TARGET)
-else
-	$(RM) $(OBJ_DIR) $(TARGET)
-endif
+	-$(RM)
 	@echo "Cleaned build files"
 
 run: $(TARGET)
