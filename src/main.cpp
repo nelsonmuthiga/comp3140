@@ -7,6 +7,7 @@
 #include "BookingService.h"
 #include "TicketService.h"
 #include "AdminService.h"
+#include "Database.h"
 
 using namespace std;
 
@@ -33,6 +34,13 @@ AdminService adminService;
 
 int main()
 {
+    // Initialize database connection
+    if (!Database::getInstance().initialize("ticketsystem.db"))
+    {
+        cerr << "Failed to initialize database. Exiting." << endl;
+        return 1;
+    }
+
     cout << "========================================" << endl;
     cout << "   Welcome to Ticket Booking System    " << endl;
     cout << "========================================" << endl;
@@ -374,11 +382,77 @@ void handleAdminMenu(shared_ptr<Admin> admin)
                     break;
                 }
                 case 2:
-                    cout << "Edit ticket feature - to be implemented" << endl;
+                {
+                    // Show available tickets first
+                    cout << "--- Current Tickets ---" << endl;
+                    ticketService.displayAvailableTickets();
+                    cout << endl;
+
+                    string ticketType;
+                    cout << "Enter ticket type to edit: ";
+                    cin >> ticketType;
+
+                    TicketInfo existingTicket = ticketService.getTicketDetails(ticketType);
+                    if (existingTicket.type.empty())
+                    {
+                        cout << "Error: Ticket type not found." << endl;
+                        break;
+                    }
+
+                    TicketInfo updatedTicket;
+                    updatedTicket.type = ticketType;
+                    cout << "Enter new description: ";
+                    cin.ignore();
+                    getline(cin, updatedTicket.description);
+                    cout << "Enter new price: ";
+                    cin >> updatedTicket.price;
+                    cout << "Enter new availability: ";
+                    cin >> updatedTicket.availability;
+                    cout << "Enter new date: ";
+                    cin.ignore();
+                    getline(cin, updatedTicket.date);
+
+                    if (ticketService.modifyTicket(ticketType, updatedTicket))
+                    {
+                        cout << "Ticket updated successfully!" << endl;
+                    }
                     break;
+                }
                 case 3:
-                    cout << "Delete ticket feature - to be implemented" << endl;
+                {
+                    // Show available tickets first
+                    cout << "--- Current Tickets ---" << endl;
+                    ticketService.displayAvailableTickets();
+                    cout << endl;
+
+                    string ticketType;
+                    cout << "Enter ticket type to delete: ";
+                    cin >> ticketType;
+
+                    TicketInfo existingTicket = ticketService.getTicketDetails(ticketType);
+                    if (existingTicket.type.empty())
+                    {
+                        cout << "Error: Ticket type not found." << endl;
+                        break;
+                    }
+
+                    cout << "Are you sure you want to delete '" << ticketType << "'? (y/n): ";
+                    char confirm;
+                    cin >> confirm;
+
+                    if (confirm == 'y' || confirm == 'Y')
+                    {
+                        if (ticketService.deleteTicket(ticketType))
+                        {
+                            cout << "Ticket deleted successfully!" << endl;
+                        }
+                    }
+                    else
+                    {
+                        cout << "Deletion cancelled." << endl;
+                    }
                     break;
+                }
                 }
             }
             pauseScreen();
@@ -447,24 +521,24 @@ void login()
     cout << "Password: ";
     cin >> password;
 
-    // TODO: Implement actual authentication with database
-    // For now, simple demo logic
-    if (username == "admin" && password == "admin")
+    // Authenticate using database
+    UserRecord user = Database::getInstance().getUserByUsername(username);
+
+    if (user.id != 0 && user.password == password)
     {
-        // Create Admin user object
-        currentUser = make_shared<Admin>(1, username, password, "Administrator", "admin@ticketsystem.com");
-        if (currentUser->login(username, password))
+        if (user.userType == "admin")
         {
-            isLoggedIn = true;
+            currentUser = make_shared<Admin>(user.id, user.username, user.password, user.fullName, user.email);
         }
-    }
-    else if (!username.empty() && !password.empty())
-    {
-        // Create Customer user object
-        currentUser = make_shared<Customer>(2, username, password, username, username + "@example.com", "555-0000");
+        else
+        {
+            currentUser = make_shared<Customer>(user.id, user.username, user.password, user.fullName, user.email, user.phone);
+        }
+
         if (currentUser->login(username, password))
         {
             isLoggedIn = true;
+            cout << "\nLogin successful! Welcome, " << user.fullName << "!" << endl;
         }
     }
     else
@@ -489,17 +563,28 @@ void registerUser()
     cin.ignore();
     getline(cin, fullName);
     cout << "Email: ";
-    cin >> email;
-    cout << "Phone: ";
-    cin >> phone;
+    getline(cin, email);
+    cout << "Phone (optional, press Enter to skip): ";
+    getline(cin, phone);
 
-    // TODO: Implement actual registration logic with database
-    // For now, just create a Customer object to validate the input
-    int newId = rand() % 1000 + 100; // Generate random ID for demo
-    Customer newCustomer(newId, username, password, fullName, email, phone);
+    // Check if username already exists
+    if (Database::getInstance().userExists(username))
+    {
+        cout << "\nRegistration failed! Username already exists." << endl;
+        pauseScreen();
+        return;
+    }
 
-    cout << "\nRegistration successful! You can now login." << endl;
-    cout << "Welcome, " << newCustomer.getFullName() << "!" << endl;
+    // Create user in database
+    if (Database::getInstance().createUser(username, password, fullName, email, phone, "customer"))
+    {
+        cout << "\nRegistration successful! You can now login." << endl;
+        cout << "Welcome, " << fullName << "!" << endl;
+    }
+    else
+    {
+        cout << "\nRegistration failed! Please try again." << endl;
+    }
     pauseScreen();
 }
 

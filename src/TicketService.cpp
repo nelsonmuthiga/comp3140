@@ -1,35 +1,18 @@
 #include "TicketService.h"
+#include "Database.h"
 #include <iostream>
 #include <algorithm>
 
 std::vector<TicketInfo> TicketService::getAvailableTickets() const
 {
-    std::vector<TicketInfo> tickets;
-
-    // TODO: Retrieve from database
-    // Placeholder data for demonstration
-    tickets.push_back({"Cab", "City Taxi Service", 25.0, 50, "Available Now"});
-    tickets.push_back({"Plane", "Flight to New York", 450.0, 20, "2025-12-01"});
-    tickets.push_back({"Train", "Express to Boston", 85.0, 100, "2025-11-25"});
-
-    return tickets;
+    // Retrieve tickets from database
+    return Database::getInstance().getAllTickets();
 }
 
 TicketInfo TicketService::getTicketDetails(const std::string &ticketType) const
 {
-    // TODO: Retrieve specific ticket from database
-    auto tickets = getAvailableTickets();
-
-    for (const auto &ticket : tickets)
-    {
-        if (ticket.type == ticketType)
-        {
-            return ticket;
-        }
-    }
-
-    // Return empty ticket if not found
-    return {"", "", 0.0, 0, ""};
+    // Retrieve specific ticket from database
+    return Database::getInstance().getTicketByType(ticketType);
 }
 
 bool TicketService::updateTicketAvailability(const std::string &ticketType, int change)
@@ -40,11 +23,17 @@ bool TicketService::updateTicketAvailability(const std::string &ticketType, int 
         return false;
     }
 
-    // NOTE: Cannot have negative availability
-    // TODO: Update database with new availability
-    std::cout << "Updated availability for " << ticketType << " by " << change << std::endl;
-
-    return true;
+    // Update database with new availability
+    if (Database::getInstance().updateTicketAvailability(ticketType, change))
+    {
+        std::cout << "Updated availability for " << ticketType << " by " << change << std::endl;
+        return true;
+    }
+    else
+    {
+        std::cout << "Error: Failed to update availability (insufficient tickets)." << std::endl;
+        return false;
+    }
 }
 
 bool TicketService::createTicket(const TicketInfo &ticket)
@@ -63,10 +52,17 @@ bool TicketService::createTicket(const TicketInfo &ticket)
         return false;
     }
 
-    // TODO: Insert into database
-    std::cout << "Ticket created successfully: " << ticket.type << std::endl;
-
-    return true;
+    // Insert into database
+    if (Database::getInstance().createTicket(ticket))
+    {
+        std::cout << "Ticket created successfully: " << ticket.type << std::endl;
+        return true;
+    }
+    else
+    {
+        std::cout << "Error: Failed to create ticket in database." << std::endl;
+        return false;
+    }
 }
 
 bool TicketService::modifyTicket(const std::string &ticketType, const TicketInfo &newInfo)
@@ -83,10 +79,17 @@ bool TicketService::modifyTicket(const std::string &ticketType, const TicketInfo
         return false;
     }
 
-    // TODO: Update database
-    std::cout << "Ticket modified successfully: " << ticketType << std::endl;
-
-    return true;
+    // Delete old ticket and create new one (simple update approach)
+    if (Database::getInstance().deleteTicket(ticketType) && Database::getInstance().createTicket(newInfo))
+    {
+        std::cout << "Ticket modified successfully: " << ticketType << std::endl;
+        return true;
+    }
+    else
+    {
+        std::cout << "Error: Failed to modify ticket in database." << std::endl;
+        return false;
+    }
 }
 
 bool TicketService::deleteTicket(const std::string &ticketType)
@@ -97,13 +100,17 @@ bool TicketService::deleteTicket(const std::string &ticketType)
         return false;
     }
 
-    // NOTE: Check if there are active bookings for this ticket
-    // TODO: Verify no active bookings before deletion
-
-    // TODO: Delete from database
-    std::cout << "Ticket deleted successfully: " << ticketType << std::endl;
-
-    return true;
+    // Delete from database
+    if (Database::getInstance().deleteTicket(ticketType))
+    {
+        std::cout << "Ticket deleted successfully: " << ticketType << std::endl;
+        return true;
+    }
+    else
+    {
+        std::cout << "Error: Failed to delete ticket from database." << std::endl;
+        return false;
+    }
 }
 
 void TicketService::displayAvailableTickets() const
@@ -150,17 +157,6 @@ bool TicketService::validateTicketInfo(const TicketInfo &ticket) const
 
 bool TicketService::ticketExists(const std::string &ticketType) const
 {
-    // TODO: Check database
-    // For now, check against hardcoded list
-    auto tickets = getAvailableTickets();
-
-    for (const auto &ticket : tickets)
-    {
-        if (ticket.type == ticketType)
-        {
-            return true;
-        }
-    }
-
-    return false;
+    // Check database for ticket existence
+    return Database::getInstance().ticketExists(ticketType);
 }

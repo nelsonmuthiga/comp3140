@@ -1,6 +1,6 @@
 CXX = g++
 CC = gcc
-CXXFLAGS = -I include -std=c++11 -Wall -Wextra
+CXXFLAGS = -I include -std=c++17 -Wall -Wextra
 CFLAGS = -I include
 SRC_DIR = src
 OBJ_DIR = obj
@@ -8,9 +8,9 @@ INCLUDE_DIR = include
 
 # OS detection
 ifeq ($(OS),Windows_NT)
-	RM = rmdir /s /q
-	RM_FILE = del /q
-	MKDIR = if not exist $(OBJ_DIR) mkdir $(OBJ_DIR)
+	RM = cmd /C "rmdir /s /q"
+	RM_FILE = cmd /C "del /q"
+	MKDIR = cmd /C "if not exist $(OBJ_DIR) mkdir $(OBJ_DIR)"
 	TARGET = ticket_system.exe
 	RUN = $(TARGET)
 else
