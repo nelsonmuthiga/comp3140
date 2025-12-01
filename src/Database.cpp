@@ -55,6 +55,42 @@ void Database::close()
 
 bool Database::createTables()
 {
+    // Check if old schema exists and drop it
+    const char *checkOldSchema = "SELECT name FROM sqlite_master WHERE type='table' AND name='tickets';";
+    sqlite3_stmt *stmt;
+    if (sqlite3_prepare_v2(db, checkOldSchema, -1, &stmt, nullptr) == SQLITE_OK)
+    {
+        if (sqlite3_step(stmt) == SQLITE_ROW)
+        {
+            // Table exists, check if it has old 'description' column
+            const char *checkColumn = "PRAGMA table_info(tickets);";
+            sqlite3_stmt *colStmt;
+            bool hasOldSchema = false;
+
+            if (sqlite3_prepare_v2(db, checkColumn, -1, &colStmt, nullptr) == SQLITE_OK)
+            {
+                while (sqlite3_step(colStmt) == SQLITE_ROW)
+                {
+                    const char *colName = reinterpret_cast<const char *>(sqlite3_column_text(colStmt, 1));
+                    if (colName && std::string(colName) == "description")
+                    {
+                        hasOldSchema = true;
+                        break;
+                    }
+                }
+                sqlite3_finalize(colStmt);
+            }
+
+            // If old schema detected, drop and recreate
+            if (hasOldSchema)
+            {
+                std::cout << "Detected old database schema. Migrating to new schema..." << std::endl;
+                sqlite3_exec(db, "DROP TABLE IF EXISTS tickets;", nullptr, nullptr, nullptr);
+            }
+        }
+        sqlite3_finalize(stmt);
+    }
+
     const char *userTableSQL = R"(
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,

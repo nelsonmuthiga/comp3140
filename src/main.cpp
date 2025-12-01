@@ -425,11 +425,11 @@ void handleAdminMenu(shared_ptr<Admin> admin)
 
                     if (ticketService.createTicket(newTicket))
                     {
-                        cout << "\n✓ Ticket created successfully!" << endl;
+                        cout << "\nTicket created successfully!" << endl;
                     }
                     else
                     {
-                        cout << "\n✗ Failed to create ticket." << endl;
+                        cout << "\nFailed to create ticket." << endl;
                     }
                     break;
                 }

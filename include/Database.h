@@ -106,14 +106,14 @@ public:
     // Ticket operations
     std::vector<TicketInfo> getAllTickets();
     TicketInfo getTicketById(int ticketId);
-    TicketInfo getTicketByType(const std::string &type); // Returns first match (legacy)
-    int getTicketIdByType(const std::string &type);      // Returns first match (legacy)
+    TicketInfo getTicketByType(const std::string &type);
+    int getTicketIdByType(const std::string &type);
     bool createTicket(const TicketInfo &ticket);
     bool updateTicketAvailability(int ticketId, int change);
     bool updateTicketById(int ticketId, const TicketInfo &ticket);
     bool deleteTicketById(int ticketId);
-    bool deleteTicket(const std::string &type); // Legacy - deletes by type
-    bool ticketExists(const std::string &type); // Legacy
+    bool deleteTicket(const std::string &type);
+    bool ticketExists(const std::string &type);
 
     // Vehicle operations
     bool createVehicle(const VehicleRecord &vehicle);
