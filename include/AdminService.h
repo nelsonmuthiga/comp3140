@@ -10,7 +10,7 @@ class Admin;
 
 /**
  * AdminService handles all business logic related to administrative operations.
- * This includes viewing system data, generating reports, and managing permissions.
+ * eg:
  */
 class AdminService
 {
@@ -42,7 +42,7 @@ public:
     std::string generateBookingStatistics() const;
 
     /**
-     * Validate if an admin has access to perform a specific operation
+     * Checks if an admin or not
      * @param admin The admin user
      * @param operation The operation to validate
      * @return true if admin has permission, false otherwise

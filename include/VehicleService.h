@@ -12,8 +12,7 @@ class Cab;
 class Train;
 
 /**
- * VehicleService handles all business logic related to vehicle management.
- * This service works with actual vehicle objects (OOP approach) rather than just data records.
+ * Handles all business logic related to vehicle management (e.g., creation, deletion, retrieval).
  */
 class VehicleService
 {
@@ -22,7 +21,7 @@ public:
 
     /**
      * Get all vehicles as objects
-     * @return Vector of BaseVehicle pointers (polymorphic)
+     * @return Vector of BaseVehicle pointers
      */
     std::vector<std::shared_ptr<BaseVehicle>> getAllVehicleObjects() const;
 

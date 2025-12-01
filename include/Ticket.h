@@ -23,6 +23,7 @@ public:
     Ticket(const std::string &ticketId, BaseUser *user, BaseVehicle *vehicle,
            const std::string &travelDate, const std::string &origin,
            const std::string &destination, double price, const std::string &status);
+
     void setStatus(const std::string &status);
     std::string getStatus() const;
     std::string getTicketId() const;

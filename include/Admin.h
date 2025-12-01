@@ -5,8 +5,7 @@
 #include <string>
 
 /**
- * Admin entity class - maintains only internal state and identity.
- * Business logic has been moved to service classes as per our instructors feedback on the last project submission  (AdminService, BookingService, TicketService).
+ *Methods has been moved to service classes as per our instructors feedback on the last project submission  (AdminService, BookingService, TicketService and newly added VehicleService).
  */
 class Admin : public BaseUser
 {

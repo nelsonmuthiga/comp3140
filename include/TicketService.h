@@ -90,13 +90,7 @@ public:
 
     /**
      * Create a ticket linked to a specific vehicle object
-     * @param type Ticket type
-     * @param origin Starting location
-     * @param destination Ending location
-     * @param price Ticket price
-     * @param availability Number of tickets available
-     * @param date Travel date
-     * @param vehicle The vehicle object to link to this ticket
+     * @param type, origin, destination, price, availability, date, vehicle required fields
      * @return true if creation successful
      */
     bool createTicketWithVehicle(const std::string &type, const std::string &origin, const std::string &destination,

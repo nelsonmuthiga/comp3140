@@ -24,7 +24,7 @@ public:
              const std::string &fullName, const std::string &email,
              const std::string &phone);
 
-    // State management methods only - no business logic
+    // getters
     std::string getPhone() const;
     void setPhone(const std::string &phone);
 

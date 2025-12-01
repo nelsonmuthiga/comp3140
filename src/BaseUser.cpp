@@ -10,8 +10,6 @@ BaseUser::BaseUser(int id, const std::string &userName, const std::string &passw
 void BaseUser::updateInfo()
 {
     std::cout << "Updating user information for: " << userName << std::endl;
-    // Note: Database update would require additional method in Database class
-    // For now, local object is updated; persistence requires extending Database class
 }
 
 bool BaseUser::login(const std::string &userName, const std::string &password)
