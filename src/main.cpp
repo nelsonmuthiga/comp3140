@@ -7,6 +7,7 @@
 #include "BookingService.h"
 #include "TicketService.h"
 #include "AdminService.h"
+#include "VehicleService.h"
 #include "Database.h"
 
 using namespace std;
@@ -31,6 +32,7 @@ bool isLoggedIn = false;
 BookingService bookingService;
 TicketService ticketService;
 AdminService adminService;
+VehicleService vehicleService;
 
 int main()
 {
@@ -85,10 +87,12 @@ void displayAdminMenu()
         cout << "Welcome, Admin " << currentUser->getFullName() << "!" << endl;
     }
     cout << "1. View All Tickets" << endl;
-    cout << "2. Manage Bookings (Add/Edit/Delete)" << endl;
+    cout << "2. Manage Tickets (Add/Edit/Delete)" << endl;
     cout << "3. View Customer List" << endl;
-    cout << "4. Generate Reports" << endl;
-    cout << "5. Logout" << endl;
+    cout << "4. View Vehicles (OOP)" << endl;
+    cout << "5. Manage Vehicles (Add Vehicle)" << endl;
+    cout << "6. Generate Reports" << endl;
+    cout << "7. Logout" << endl;
     cout << "Enter your choice: ";
 }
 
@@ -186,7 +190,7 @@ void handleCustomerMenu(shared_ptr<Customer> customer)
             for (size_t i = 0; i < tickets.size(); ++i)
             {
                 cout << (i + 1) << ". " << tickets[i].type
-                     << " - " << tickets[i].description
+                     << " from " << tickets[i].origin << " to " << tickets[i].destination
                      << " (Date: " << tickets[i].date
                      << ", Price: $" << tickets[i].price << ")" << endl;
             }
@@ -203,7 +207,7 @@ void handleCustomerMenu(shared_ptr<Customer> customer)
                     cout << "Invalid input! Please enter a number for ticket type." << endl;
                     continue;
                 }
-                cout << "Number of tickets: ";
+                cout << "Number of tickets (how many seats to book): ";
                 cin >> numTickets;
                 if (cin.fail())
                 {
@@ -324,14 +328,9 @@ void handleAdminMenu(shared_ptr<Admin> admin)
         {
         case 1:
         {
-            // Use BookingService to view all bookings
-            auto allBookings = bookingService.getAllBookings();
-            cout << "--- All Tickets (Admin View) ---" << endl;
-            cout << "All system bookings:" << endl;
-            for (const auto &booking : allBookings)
-            {
-                cout << booking << endl;
-            }
+            // Display ticket inventory
+            cout << "--- All Tickets (Inventory) ---" << endl;
+            ticketService.displayAvailableTickets();
             pauseScreen();
             break;
         }
@@ -361,24 +360,76 @@ void handleAdminMenu(shared_ptr<Admin> admin)
                 {
                 case 1:
                 {
+                    cout << "\n=== Create New Ticket ===" << endl;
+
+                    // Step 1: Show all vehicles
+                    auto vehicles = Database::getInstance().getAllVehicles();
+                    if (vehicles.empty())
+                    {
+                        cout << "No vehicles available. Please add vehicles first." << endl;
+                        break;
+                    }
+
+                    cout << "\nAvailable Vehicles:" << endl;
+                    for (size_t i = 0; i < vehicles.size(); ++i)
+                    {
+                        cout << (i + 1) << ". " << vehicles[i].vehicleType
+                             << " (ID: " << vehicles[i].id << ", Capacity: " << vehicles[i].capacity << ")";
+
+                        // Show vehicle-specific details
+                        if (vehicles[i].vehicleType == "Plane")
+                            cout << " - Airline: " << vehicles[i].airline;
+                        else if (vehicles[i].vehicleType == "Cab")
+                            cout << " - License: " << vehicles[i].licensePlate;
+                        else if (vehicles[i].vehicleType == "Train")
+                            cout << " - Train: " << vehicles[i].trainNumber;
+                        cout << endl;
+                    }
+
+                    // Step 2: Select vehicle
+                    int vehicleChoice;
+                    cout << "\nSelect vehicle (1-" << vehicles.size() << "): ";
+                    cin >> vehicleChoice;
+
+                    if (vehicleChoice < 1 || vehicleChoice > static_cast<int>(vehicles.size()))
+                    {
+                        cout << "Invalid choice!" << endl;
+                        break;
+                    }
+
+                    auto selectedVehicle = vehicles[vehicleChoice - 1];
+
+                    // Step 3: Create ticket using selected vehicle info
                     TicketInfo newTicket;
-                    newTicket.id = 0; // New ticket, ID will be auto-generated
-                    cout << "Enter ticket type (e.g., Train, Plane, Bus, Cab): ";
-                    cin >> newTicket.type;
-                    cout << "Enter description (destination/route): ";
+                    newTicket.id = 0;
+                    newTicket.type = selectedVehicle.vehicleType; // Auto-set from vehicle
+                    newTicket.vehicleId = selectedVehicle.id;     // Link to vehicle
+
+                    cout << "\nCreating " << selectedVehicle.vehicleType << " ticket..." << endl;
+                    cout << "Enter origin (starting location): ";
                     cin.ignore();
-                    getline(cin, newTicket.description);
-                    cout << "Enter price: ";
+                    getline(cin, newTicket.origin);
+
+                    cout << "Enter destination (ending location): ";
+                    getline(cin, newTicket.destination);
+
+                    cout << "Enter price: $";
                     cin >> newTicket.price;
-                    cout << "Enter availability: ";
+
+                    cout << "Enter availability (max " << selectedVehicle.capacity << " seats): ";
                     cin >> newTicket.availability;
-                    cout << "Enter date: ";
+
+                    cout << "Enter date (YYYY-MM-DD): ";
                     cin.ignore();
                     getline(cin, newTicket.date);
 
                     if (ticketService.createTicket(newTicket))
                     {
-                        cout << "Ticket created successfully!" << endl;
+                        cout << "\n✓ Ticket created successfully!" << endl;
+                    }
+                    else
+                    {
+                        cout << "\n✗ Failed to create ticket." << endl;
                     }
                     break;
                 }
@@ -408,20 +459,30 @@ void handleAdminMenu(shared_ptr<Admin> admin)
                         break;
                     }
 
-                    cout << "Editing: " << existingTicket.type << " - " << existingTicket.description << endl;
+                    cout << "\nEditing: " << existingTicket.type << " - From: " << existingTicket.origin << " To: " << existingTicket.destination << endl;
+                    cout << "Current price: $" << existingTicket.price << " | Availability: " << existingTicket.availability << endl;
 
                     TicketInfo updatedTicket;
                     updatedTicket.id = ticketId;
-                    cout << "Enter new type (current: " << existingTicket.type << "): ";
+                    updatedTicket.vehicleId = existingTicket.vehicleId; // Preserve vehicle link
+
+                    cout << "\nEnter new type (current: " << existingTicket.type << ", case insensitive): ";
                     cin >> updatedTicket.type;
-                    cout << "Enter new description: ";
+
+                    cout << "Enter new origin: ";
                     cin.ignore();
-                    getline(cin, updatedTicket.description);
-                    cout << "Enter new price (current: $" << existingTicket.price << "): ";
+                    getline(cin, updatedTicket.origin);
+
+                    cout << "Enter new destination: ";
+                    getline(cin, updatedTicket.destination);
+
+                    cout << "Enter new price (e.g., 150.50): $";
                     cin >> updatedTicket.price;
-                    cout << "Enter new availability (current: " << existingTicket.availability << "): ";
+
+                    cout << "Enter new availability (number of seats): ";
                     cin >> updatedTicket.availability;
-                    cout << "Enter new date: ";
+
+                    cout << "Enter new date (format: YYYY-MM-DD, e.g., 2025-12-25): ";
                     cin.ignore();
                     getline(cin, updatedTicket.date);
 
@@ -455,7 +516,7 @@ void handleAdminMenu(shared_ptr<Admin> admin)
                     }
 
                     cout << "Are you sure you want to delete '" << existingTicket.type
-                         << " - " << existingTicket.description << "'? (y/n): ";
+                         << " from " << existingTicket.origin << " to " << existingTicket.destination << "'? (y/n): ";
                     char confirm;
                     cin >> confirm;
 
@@ -480,6 +541,120 @@ void handleAdminMenu(shared_ptr<Admin> admin)
             pauseScreen();
             break;
         case 4:
+            // Use VehicleService to view vehicles
+            vehicleService.displayAllVehicles();
+            pauseScreen();
+            break;
+        case 5:
+        {
+            // Vehicle Management (Add Vehicle)
+            cout << "--- Add New Vehicle ---" << endl;
+            cout << "1. Add Plane" << endl;
+            cout << "2. Add Cab" << endl;
+            cout << "3. Add Train" << endl;
+            cout << "4. Back" << endl;
+
+            int vehicleChoice;
+            cout << "Enter your choice: ";
+            cin >> vehicleChoice;
+
+            if (cin.fail())
+            {
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cout << "Invalid input!" << endl;
+            }
+            else
+            {
+                clearScreen();
+                switch (vehicleChoice)
+                {
+                case 1:
+                {
+                    // Add Plane
+                    string airline, flightNumber, flightNo;
+                    int capacity;
+
+                    cout << "\n=== Add New Plane ===" << endl;
+                    cout << "Enter airline name (e.g., AirExpress): ";
+                    cin.ignore();
+                    getline(cin, airline);
+                    cout << "Enter flight number (e.g., AE123): ";
+                    getline(cin, flightNumber);
+                    cout << "Enter flight no (e.g., AE123): ";
+                    getline(cin, flightNo);
+                    cout << "Enter capacity (number of seats, e.g., 180): ";
+                    cin >> capacity;
+
+                    int vehicleId = vehicleService.createPlane(airline, flightNumber, flightNo, capacity);
+                    if (vehicleId > 0)
+                    {
+                        cout << "\n✓ Plane created successfully with ID: " << vehicleId << endl;
+                    }
+                    else
+                    {
+                        cout << "\n✗ Failed to create plane." << endl;
+                    }
+                    break;
+                }
+                case 2:
+                {
+                    // Add Cab
+                    string licensePlate, driverName;
+                    int capacity;
+
+                    cout << "\n=== Add New Cab ===" << endl;
+                    cout << "Enter license plate (e.g., ABC123): ";
+                    cin.ignore();
+                    getline(cin, licensePlate);
+                    cout << "Enter driver name (e.g., John Smith): ";
+                    getline(cin, driverName);
+                    cout << "Enter capacity (number of seats, e.g., 4): ";
+                    cin >> capacity;
+
+                    int vehicleId = vehicleService.createCab(licensePlate, driverName, capacity);
+                    if (vehicleId > 0)
+                    {
+                        cout << "\n✓ Cab created successfully with ID: " << vehicleId << endl;
+                    }
+                    else
+                    {
+                        cout << "\n✗ Failed to create cab." << endl;
+                    }
+                    break;
+                }
+                case 3:
+                {
+                    // Add Train
+                    string trainNumber, platform;
+                    int capacity;
+
+                    cout << "\n=== Add New Train ===" << endl;
+                    cout << "Enter train number (e.g., TR100): ";
+                    cin.ignore();
+                    getline(cin, trainNumber);
+                    cout << "Enter platform (e.g., Platform 1): ";
+                    getline(cin, platform);
+                    cout << "Enter capacity (number of seats, e.g., 500): ";
+                    cin >> capacity;
+
+                    int vehicleId = vehicleService.createTrain(trainNumber, platform, capacity);
+                    if (vehicleId > 0)
+                    {
+                        cout << "\n✓ Train created successfully with ID: " << vehicleId << endl;
+                    }
+                    else
+                    {
+                        cout << "\n✗ Failed to create train." << endl;
+                    }
+                    break;
+                }
+                }
+            }
+            pauseScreen();
+            break;
+        }
+        case 6:
         {
             // Use AdminService for reports
             adminService.displayReportsMenu();
@@ -512,7 +687,7 @@ void handleAdminMenu(shared_ptr<Admin> admin)
             pauseScreen();
             break;
         }
-        case 5:
+        case 7:
             cout << "Logging out..." << endl;
             admin->logout();
             isLoggedIn = false;

@@ -60,6 +60,17 @@ public:
      */
     void displayReportsMenu() const;
 
+    /**
+     * View all vehicles in the system
+     * @return Vector of vehicle information strings
+     */
+    std::vector<std::string> viewAllVehicles() const;
+
+    /**
+     * Display all vehicles in formatted output
+     */
+    void displayVehicleList() const;
+
 private:
     /**
      * Format booking data for reporting

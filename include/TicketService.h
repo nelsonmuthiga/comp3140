@@ -3,6 +3,10 @@
 
 #include <string>
 #include <vector>
+#include <memory>
+
+// Forward declarations
+class BaseVehicle;
 
 /**
  * Structure to hold ticket information
@@ -11,10 +15,12 @@ struct TicketInfo
 {
     int id;                  // Database ID (0 for new tickets)
     std::string type;        // Category: Cab, Plane, Train.
-    std::string description; // Destination/route description
+    std::string origin;      // Starting point
+    std::string destination; // Ending point
     double price;            // Price of the ticket
     int availability;        // Number of tickets available
     std::string date;        // Date of travel or availability (format: YYYY-MM-DD or descriptive text)
+    int vehicleId;           // ID of the associated vehicle (0 if not linked)
 };
 
 /**
@@ -81,6 +87,28 @@ public:
      * Display all available tickets (for browsing)
      */
     void displayAvailableTickets() const;
+
+    /**
+     * Create a ticket linked to a specific vehicle object
+     * @param type Ticket type
+     * @param origin Starting location
+     * @param destination Ending location
+     * @param price Ticket price
+     * @param availability Number of tickets available
+     * @param date Travel date
+     * @param vehicle The vehicle object to link to this ticket
+     * @return true if creation successful
+     */
+    bool createTicketWithVehicle(const std::string &type, const std::string &origin, const std::string &destination,
+                                 double price, int availability, const std::string &date,
+                                 std::shared_ptr<BaseVehicle> vehicle);
+
+    /**
+     * Get the vehicle object associated with a ticket
+     * @param ticketId The ticket ID
+     * @return Pointer to vehicle object, or nullptr if not linked
+     */
+    std::shared_ptr<BaseVehicle> getTicketVehicle(int ticketId) const;
 
 private:
     /**

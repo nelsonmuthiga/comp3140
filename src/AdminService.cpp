@@ -212,3 +212,56 @@ double AdminService::calculateTotalRevenue() const
     // Get total revenue from database
     return Database::getInstance().getTotalRevenue();
 }
+
+std::vector<std::string> AdminService::viewAllVehicles() const
+{
+    std::vector<std::string> vehicles;
+
+    // Retrieve from database
+    auto vehicleRecords = Database::getInstance().getAllVehicles();
+
+    for (const auto &record : vehicleRecords)
+    {
+        std::ostringstream vehicleStr;
+        vehicleStr << "ID: " << record.id << " | Type: " << record.vehicleType
+                   << " | Capacity: " << record.capacity;
+
+        if (record.vehicleType == "Plane")
+        {
+            vehicleStr << " | Airline: " << record.airline
+                       << " | Flight: " << record.flightNumber;
+        }
+        else if (record.vehicleType == "Cab")
+        {
+            vehicleStr << " | License: " << record.licensePlate
+                       << " | Driver: " << record.driverName;
+        }
+        else if (record.vehicleType == "Train")
+        {
+            vehicleStr << " | Train#: " << record.trainNumber
+                       << " | Platform: " << record.platform;
+        }
+
+        vehicles.push_back(vehicleStr.str());
+    }
+
+    return vehicles;
+}
+
+void AdminService::displayVehicleList() const
+{
+    auto vehicles = viewAllVehicles();
+
+    std::cout << "\n--- Vehicle List ---" << std::endl;
+    if (vehicles.empty())
+    {
+        std::cout << "No vehicles found." << std::endl;
+        return;
+    }
+
+    std::cout << "Available Vehicles:" << std::endl;
+    for (const auto &vehicle : vehicles)
+    {
+        std::cout << vehicle << std::endl;
+    }
+}

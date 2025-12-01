@@ -49,7 +49,7 @@ std::string BookingService::createBooking(std::shared_ptr<Customer> customer,
 
     // Display booking confirmation
     std::cout << "Processing booking..." << std::endl;
-    std::cout << "Ticket: " << ticket.type << " - " << ticket.description << std::endl;
+    std::cout << "Ticket: " << ticket.type << " from " << ticket.origin << " to " << ticket.destination << std::endl;
     std::cout << "Date: " << ticket.date << std::endl;
     std::cout << "Number of Tickets: " << numTickets << std::endl;
     std::cout << "Total Price: $" << totalPrice << std::endl;

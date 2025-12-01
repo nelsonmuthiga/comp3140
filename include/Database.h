@@ -11,6 +11,33 @@
 class Customer;
 class Admin;
 class BaseUser;
+class BaseVehicle;
+class Plane;
+class Cab;
+class Train;
+
+/**
+ * Struct to hold vehicle information from database
+ */
+struct VehicleRecord
+{
+    int id;
+    std::string vehicleType; // "Plane", "Cab", "Train"
+    int capacity;
+
+    // Plane-specific fields
+    std::string airline;
+    std::string flightNumber;
+    std::string flightNo;
+
+    // Cab-specific fields
+    std::string licensePlate;
+    std::string driverName;
+
+    // Train-specific fields
+    std::string trainNumber;
+    std::string platform;
+};
 
 /**
  * Struct to hold booking information from database
@@ -87,6 +114,15 @@ public:
     bool deleteTicketById(int ticketId);
     bool deleteTicket(const std::string &type); // Legacy - deletes by type
     bool ticketExists(const std::string &type); // Legacy
+
+    // Vehicle operations
+    bool createVehicle(const VehicleRecord &vehicle);
+    std::vector<VehicleRecord> getAllVehicles();
+    VehicleRecord getVehicleById(int vehicleId);
+    std::vector<VehicleRecord> getVehiclesByType(const std::string &type);
+    bool updateVehicle(int vehicleId, const VehicleRecord &vehicle);
+    bool deleteVehicle(int vehicleId);
+    std::shared_ptr<BaseVehicle> createVehicleObject(const VehicleRecord &record);
 
     // Booking operations
     std::string createBooking(int userId, int ticketId, const std::string &ticketType,
