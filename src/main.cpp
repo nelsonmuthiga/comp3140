@@ -583,6 +583,14 @@ void registerUser()
     cout << "Phone (optional, press Enter to skip): ";
     getline(cin, phone);
 
+    // Basic validation
+    if (username.empty() || password.empty() || fullName.empty() || email.empty())
+    {
+        cout << "\nRegistration failed! All fields except phone are required." << endl;
+        pauseScreen();
+        return;
+    }
+
     // Check if username already exists
     if (Database::getInstance().userExists(username))
     {
